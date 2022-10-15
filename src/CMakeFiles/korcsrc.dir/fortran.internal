@@ -1,0 +1,30 @@
+# The fortran modules provided by this target.
+provides
+ korc_avalanche.mod
+ korc_collisions.mod
+ korc_constants.mod
+ korc_coords.mod
+ korc_energy_pdfs.mod
+ korc_experimental_pdf.mod
+ korc_fields.mod
+ korc_finalize.mod
+ korc_fio.mod
+ korc_hammersley_generator.mod
+ korc_hdf5.mod
+ korc_hpc.mod
+ korc_initialize.mod
+ korc_input.mod
+ korc_interp.mod
+ korc_ppusher.mod
+ korc_profiles.mod
+ korc_random.mod
+ korc_rnd_numbers.mod
+ korc_simple_equilibrium_pdf.mod
+ korc_spatial_distribution.mod
+ korc_types.mod
+ korc_units.mod
+ korc_velocity_distribution.mod
+ nr.mod
+ nrtype.mod
+ nrutil.mod
+ special_functions.mod

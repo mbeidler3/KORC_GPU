@@ -1,0 +1,207 @@
+#!/bin/bash
+#
+#  setup_cmake Chooses the correct cmake build command for a machine.
+#
+#-------------------------------------------------------------------------------
+
+BUILD_TYPE=Release
+
+MACHINE_ID=`uname -n`
+
+echo Building KORC for machine $MACHINE_ID
+echo
+
+if [ $# -eq 1 ]
+then
+    BUILD_TYPE=Debug
+fi
+
+echo cmake configured to generate a $BUILD_TYPE build.
+if [ "$BUILD_TYPE" == Debug ]
+then
+    echo "    cmake may be reconfigured to generate a Release build by running this     "
+    echo "    script with no arguments or using the commmand                            "
+    echo
+    echo "    cmake -DCMAKE_BUILD_TYPE=Release                                          "
+else
+    echo "    cmake may be reconfigured to generate a Debug build by running this script"
+    echo "    with a Debug argument or using the commmand                               "
+    echo
+    echo "    cmake -DCMAKE_BUILD_TYPE=Debug                                            "
+fi
+
+# CMake doesn't like being reconfigured completely. To avoid problems this
+# script will delete the CMakeCache.txt file allowing this script to start
+# from a clean slate. Use the -f option on rm to silence any errors from
+# rm. This makes will cause rm to ignore the error to occur if
+# CMakeCache.txt doesn't exist.
+
+rm -f CMakeCache.txt
+rm -rf CMakeFiles
+
+
+echo
+if [ $MACHINE_ID == "mbp103254"     ] || \
+   [ $MACHINE_ID == "cianciosaimac" ]
+then
+    #  Config for Mark Cianciosa's ORNL machine.
+
+    cmake -DCMAKE_BUILD_TYPE:String=$BUILD_TYPE                             \
+          -DEZSpline_INCLUDE_PATH=/Users/m4c/repo/trunk/build/modules/stell \
+          -DEZSpline_LINK_FLAGS="-L/Users/m4c/repo/trunk/build/lib -lstell" \
+          -DCMAKE_Fortran_FLAGS=-DHDF5_DOUBLE_PRESICION
+
+elif [ $MACHINE_ID == "MBP115573"     ]
+then
+    #  Config for Matt Beidler's ORNL machine.
+
+#    export CC=/opt/local/bin/mpicc-mpich-gcc8
+#    export CXX=/opt/local/bin/mpic++-mpich-gcc8
+#    export FC=/opt/local/bin/mpif90-mpich-gcc8
+
+    export CC=/opt/local/bin/gcc-mp-11
+    export CXX=/opt/local/bin/g++-mp-11
+    export FC=/opt/local/bin/gfortran-mp-11
+
+    cmake -DCMAKE_BUILD_TYPE:String=$BUILD_TYPE                             \
+	  -DUSE_PSPLINE=ON         \
+     -DUSE_FIO=OFF          \
+     -DCORI_DIR=OFF \
+     -DKORC_TEST=OFF \
+     -DEZSpline_INCLUDE_PATH=/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/include \
+     -DEZSpline_LINK_FLAGS="-L/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/lib -lpspline" \
+	  -DEZSpline_LIBRARIES=/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/lib/libpspline.a   \
+     -DCMAKE_Fortran_FLAGS="-O3 -msse2 -DHDF5_DOUBLE_PRESICION -fopenmp -malign-double -fconvert='big-endian'" \
+     -DCMAKE_C_FLAGS="-O3 -msse2 -fopenmp -malign-double"  \
+     -DCMAKE_CXX_FLAGS="-O3 -msse2 -fopenmp -malign-double" \
+	  -DCMAKE_Fortran_FLAGS_DEBUG="-g -ffpe-trap=invalid,zero,overflow -fimplicit-none -fbacktrace  -fsanitize=address"   \
+     -DCMAKE_C_FLAGS_DEBUG="-g -g3" \
+ 	  -DCMAKE_CXX_FLAGS_DEBUG="-g -g3" \
+	  -DFIO_LIBRARIES=/Users/21b/Desktop/KORC/FIO/install/lib/libfusionio.a  \
+	  -DM3DC1_LIBRARIES=/Users/21b/Desktop/KORC/FIO/install/lib/libm3dc1.a	\
+     -DFIO_INCLUDE_PATH=/Users/21b/Desktop/KORC/FIO/install/include  \
+     -DFIO_LINK_FLAGS="-L/Users/21b/Desktop/KORC/FIO/install/lib -lfusionio -lm3dc1" \
+	  -DFRUIT_INCLUDE_PATH=/Users/21b/Desktop/KORC/test/fruit \
+	  -DFRUIT_LINK_FLAGS="-L/Users/21b/Desktop/KORC/test/fruit -lfruit" \
+	  -DFRUIT_LIBRARIES=/Users/21b/Desktop/KORC/test/fruit/libfruit.a \
+	  -DKORCSRC_INCLUDE_PATH=/Users/21b/Desktop/KORC/build/modules \
+	  -DKORCSRC_LINK_FLAGS="-L/Users/21b/Desktop/KORC/build/lib -lkorcsrc" \
+	  -DKORCSRC_LIBRARIES=/Users/21b/Desktop/KORC/build/lib/libkorcsrc.a \
+	  -DNIMROD_INCLUDE_PATH=/Users/21b/Desktop/NIMROD/NIMUW/nimrod \
+	  -DNIMFIO_INCLUDE_PATH=/Users/21b/Desktop/NIMROD/NIMUW/nimfio \
+	  -DNIMFIO_LINK_FLAGS="-L/Users/21b/Desktop/NIMROD/NIMUW/nimfio -lnimfio" \
+	  -DNIMFIO_LIBRARIES=/Users/21b/Desktop/NIMROD/NIMUW/nimfio/libnimfio.a \
+	  -DNIMCORE_INCLUDE_PATH=/Users/21b/Desktop/NIMROD/NIMUW/nimcore \
+	  -DNIMCORE_LINK_FLAGS="-L/Users/21b/Desktop/NIMROD/NIMUW/nimcore -lnimblock -lnimbltype -lnimlocate -lnimmatrix -lnimiter -lnimpar" \
+	  -DNIMBLK_LIBRARIES=/Users/21b/Desktop/NIMROD/NIMUW/nimcore/libnimblock.a \
+	  -DNIMBTY_LIBRARIES=/Users/21b/Desktop/NIMROD/NIMUW/nimcore/libnimbltype.a \
+	  -DNIMLOC_LIBRARIES=/Users/21b/Desktop/NIMROD/NIMUW/nimcore/libnimlocate.a \
+	  -DNIMMAT_LIBRARIES=/Users/21b/Desktop/NIMROD/NIMUW/nimcore/libnimmatrix.a \
+	  -DNIMITER_LIBRARIES=/Users/21b/Desktop/NIMROD/NIMUW/nimcore/libnimiter.a \
+	  -DNIMPAR_LIBRARIES=/Users/21b/Desktop/NIMROD/NIMUW/nimcore/libnimpar.a \
+	  -DNIMLIB_INCLUDE_PATH=/Users/21b/Desktop/NIMROD/NIMUW/nimlib \
+	  -DNIMLIB_LINK_FLAGS="-L/Users/21b/Desktop/NIMROD/NIMUW/nimlib -lnimlib -lnimmpi" \
+	  -DNIMLIB_LIBRARIES=/Users/21b/Desktop/NIMROD/NIMUW/nimlib/libnimlib.a \
+	  -DNIMMPI_LIBRARIES=/Users/21b/Desktop/NIMROD/NIMUW/nimlib/libnimmpi.a \
+	  -DNIMEXT_INCLUDE_PATH=/Users/21b/Desktop/NIMROD/NIMUW/externals \
+	  -DNIMEXT_LINK_FLAGS="-L/Users/21b/Desktop/NIMROD/NIMUW/externals -llapack_dummy -lsslu_dummy -lslud_dummy" \
+	  -DNIMLAP_LIBRARIES=/Users/21b/Desktop/NIMROD/NIMUW/externals/liblapack_dummy.a \
+	  -DNIMSLU_LIBRARIES=/Users/21b/Desktop/NIMROD/NIMUW/externals/libsslu_dummy.a \
+	  -DNIMLUD_LIBRARIES=/Users/21b/Desktop/NIMROD/NIMUW/externals/libslud_dummy.a \
+
+#	  -DCMAKE_CXX_COMPILER=/opt/local/bin/mpic++-mpich-gcc8
+
+
+elif [ $MACHINE_ID == "cori01"   ] || \
+     [ $MACHINE_ID == "cori02"   ] || \
+     [ $MACHINE_ID == "cori03"   ] || \
+     [ $MACHINE_ID == "cori04"   ] || \
+     [ $MACHINE_ID == "cori05"   ] || \
+     [ $MACHINE_ID == "cori06"   ] || \
+     [ $MACHINE_ID == "cori07"   ] || \
+     [ $MACHINE_ID == "cori08"   ] || \
+     [ $MACHINE_ID == "cori09"   ] || \
+     [ $MACHINE_ID == "cori10"   ] || \
+     [ $MACHINE_ID == "cori11"   ] || \
+     [ $MACHINE_ID == "cori12"   ]
+then
+
+    #  Config for NERSC machines.
+    module load cmake
+    module load cray-hdf5
+    module unload darshan/3.1.4
+#    module swap PrgEnv-intel PrgEnv-gnu
+    cmake -DCMAKE_BUILD_TYPE:String=$BUILD_TYPE                                          \
+          -DCMAKE_PREFIX_PATH=$MPICH_DIR                                                 \
+	  -DUSE_PSPLINE=ON          \
+          -DEZSpline_INCLUDE_PATH=/global/cfs/cdirs/m3236/build_unstable/PSPLINE_GH/pspline/build/include \
+          -DEZSpline_LINK_FLAGS="-L/global/cfs/cdirs/m3236/build_unstable/PSPLINE_GH/pspline/build/lib -lpspline" \
+          -DEZSpline_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/PSPLINE_GH/pspline/build/lib/libpspline.a   \
+	  -DCMAKE_Fortran_FLAGS="-convert big_endian -O3 -axMIC-AVX512,AVX -DHDF5_DOUBLE_PRESICION -vec-threshold0 -simd -qopenmp -align array64byte -assume contiguous_assumed_shape -vecabi=cmdtarget"  \
+          -DCMAKE_C_FLAGS="-O3 -axMIC-AVX512,AVX -vec-threshold0 -simd -qopenmp"   \
+          -DCMAKE_CXX_FLAGS="-O3 -std=c++11 -axMIC-AVX512,AVX -vec-threshold0 -simd -qopenmp" \
+          -DCMAKE_CXX_FLAGS_DEBUG="-g -traceback -Bdynamic -qopt-report=5 -qopt-report-phase=vec -simd -qopenmp" \
+          -DCMAKE_C_FLAGS_DEBUG="-g -traceback -Bdynamic -qopt-report=5 -qopt-report-phase=vec -simd -qopenmp" \
+          -DCMAKE_Fortran_FLAGS_DEBUG="-convert big_endian -g -traceback -check all -Bdynamic -debug inline-debug-info -qopt-report=5 -qopt-report-phase=vec -qoverride-limits -simd -qopenmp" \
+          -DUSE_FIO=ON           \
+	  -DFIO_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/KORC/FIO/install/lib/libfusionio.a  \
+	  -DM3DC1_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/KORC/FIO/install/lib/libm3dc1.a	\
+          -DFIO_INCLUDE_PATH=/global/cfs/cdirs/m3236/build_unstable/KORC/FIO/install/include  \
+          -DFIO_LINK_FLAGS="-L/global/cfs/cdirs/m3236/build_unstable/KORC/FIO/install/lib -lfusionio -lm3dc1" \
+	  -DCORI_DIR=ON \
+    	  -DKORC_TEST=OFF \
+	  -DNIMROD_INCLUDE_PATH=/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimrod \
+	  -DNIMFIO_INCLUDE_PATH=/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimfio \
+	  -DNIMFIO_LINK_FLAGS="-L/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimfio -lnimfio" \
+	  -DNIMFIO_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimfio/libnimfio.a \
+	  -DNIMCORE_INCLUDE_PATH=/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimcore \
+	  -DNIMCORE_LINK_FLAGS="-L/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimcore -lnimblock -lnimbltype -lnimlocate -lnimmatrix -lnimiter -lnimpar" \
+	  -DNIMBLK_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimcore/libnimblock.a \
+	  -DNIMBTY_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimcore/libnimbltype.a \
+	  -DNIMLOC_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimcore/libnimlocate.a \
+	  -DNIMMAT_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimcore/libnimmatrix.a \
+	  -DNIMITER_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimcore/libnimiter.a \
+	  -DNIMPAR_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimcore/libnimpar.a \
+	  -DNIMLIB_INCLUDE_PATH=/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimlib \
+	  -DNIMLIB_LINK_FLAGS="-L/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimlib -lnimlib -lnimmpi" \
+	  -DNIMLIB_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimlib/libnimlib.a \
+	  -DNIMMPI_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/NIMUW/nimlib/libnimmpi.a \
+	  -DNIMEXT_INCLUDE_PATH=/global/cfs/cdirs/m3236/build_unstable/NIMUW/externals \
+	  -DNIMEXT_LINK_FLAGS="-L/global/cfs/cdirs/m3236/build_unstable/NIMUW/externals -llapack_dummy -lsslu_dummy -lslud_dummy" \
+	  -DNIMLAP_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/NIMUW/externals/liblapack_dummy.a \
+	  -DNIMSLU_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/NIMUW/externals/libsslu_dummy.a \
+	  -DNIMLUD_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/NIMUW/externals/libslud_dummy.a \
+
+    #Intel Compiler
+#          -DEZSpline_INCLUDE_PATH=/global/u1/m/mbeidler/LIBS/PSPLINES/LINUX/mod \
+#          -DEZSpline_LINK_FLAGS="-L/global/u1/m/mbeidler/LIBS/PSPLINES/LINUX/lib -lpspline" \
+#          -DEZSpline_LIBRARIES=/global/u1/m/mbeidler/LIBS/PSPLINES/LINUX/lib/libpspline.a   \
+#	  -DCMAKE_Fortran_FLAGS="-O3 -axMIC-AVX512,AVX -DHDF5_DOUBLE_PRESICION -vec-threshold0 -simd -qopenmp-simd -align array64byte -assume contiguous_assumed_shape -vecabi=cmdtarget -heap-arrays"  \
+#          -DCMAKE_C_FLAGS="-O3 -axMIC-AVX512,AVX -vec-threshold0 -simd -qopenmp -heap-arrays"   \
+#          -DCMAKE_CXX_FLAGS="-O3 -std=c++11 -axMIC-AVX512,AVX -vec-threshold0 -simd -qopenmp -heap-arrays" \
+#          -DCMAKE_CXX_FLAGS_DEBUG="-g -traceback -Bdynamic -qopt-report=5 -qopt-report-phase=vec" \
+    #          -DCMAKE_C_FLAGS_DEBUG="-g -traceback -Bdynamic -qopt-report=5 -qopt-report-phase=vec " \
+#              -DCMAKE_Fortran_FLAGS_DEBUG="-g -traceback -check all -nowarn -Bdynamic -debug inline-debug-info -qopt-report=5 -qopt-report-phase=vec -qoverride-limits" \
+#          -DCMAKE_Fortran_FLAGS_DEBUG="-g -traceback -check all -Bdynamic -debug inline-debug-info -qopt-report=5 -qopt-report-phase=vec -qoverride-limits" \
+
+    #GNU Compiler
+#          -DEZSpline_INCLUDE_PATH=/global/u1/m/mbeidler/KORC_old/PSPLINES/LINUX_GNU/mod \
+#          -DEZSpline_LINK_FLAGS="-L/global/u1/m/mbeidler/KORC_old/PSPLINES/LINUX_GNU/lib -lpspline" \
+#          -DEZSpline_LIBRARIES=/global/u1/m/mbeidler/KORC_old/PSPLINES/LINUX_GNU/lib/libpspline.a   \
+#          -DCMAKE_Fortran_FLAGS="-O3 -mavx512f -mavx512cd -mavx512er -mavx512pf -DHDF5_DOUBLE_PRESICION -fopenmp-simd -malign-double" \
+#          -DCMAKE_C_FLAGS="-O3 -mavx512f -mavx512cd -mavx512er -mavx512pf -fopenmp-simd -malign-double"  \
+#          -DCMAKE_CXX_FLAGS="-O3 -mavx512f -mavx512cd -mavx512er -mavx512pf -fopenmp-simd -malign-double" \
+#	   -DCMAKE_Fortran_FLAGS_DEBUG="-g -ffpe-trap=invalid,zero,overflow -fimplicit-none -fbacktrace" \
+#          -DCMAKE_C_FLAGS_DEBUG="-g -g3" \
+#    	   -DCMAKE_CXX_FLAGS_DEBUG="-g -g3"
+
+else
+# MACHINE_ID is new and unknown. Inform the user how to add support for this new machine.
+    echo $MACHINE_ID not suported by this script.
+    echo To support this machine, add a new elif statement of the form
+    echo
+    echo elif [ \$MACHINE_ID == \"$MACHINE_ID\" ]
+    echo then
+    echo "   " cmake -DVARIABLE=value ...
+    echo
+fi
