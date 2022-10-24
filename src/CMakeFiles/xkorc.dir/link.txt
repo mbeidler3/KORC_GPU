@@ -1,1 +1,0 @@
-/opt/local/bin/gfortran-mp-11  -fopenmp -O3 -msse2 -DHDF5_DOUBLE_PRESICION -fopenmp -malign-double -fconvert='big-endian' -fopenmp -O3 -DNDEBUG -O3 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk CMakeFiles/xkorc.dir/main.f90.o -o ../build/bin/xkorc 
