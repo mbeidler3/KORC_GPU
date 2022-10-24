@@ -1,7 +1,0 @@
-#!/bin/bash
-
-git -C /Users/21b/Desktop/KORC rev-parse HEAD > git_hash.txt
-
-git -C /Users/21b/Desktop/KORC diff HEAD > git_diff.txt
-
-
