@@ -2,32 +2,34 @@ program main
 
   implicit none
 
+  INTEGER,PARAMETER 	:: rp = KIND(0.d0)
   INTEGER :: it,pp,cc,t_steps
   INTEGER,PARAMETER :: nRE=1
-  REAL, PARAMETER :: C_PI = 4.0*ATAN(1.0) !< Definition of @f$\pi@f$
-  REAL, PARAMETER :: C_E = 1.602176E-19 !< Absolute value of electron charge in Coulombs (C).
-  REAL, PARAMETER :: C_ME = 9.109382E-31 !< Electron mass in kg
-  REAL, PARAMETER :: C_C = 299792458.0 !< Light speed in m/s
-  REAL,DIMENSION(nRE) :: X_X,X_Y,X_Z
-  REAL,DIMENSION(nRE) :: V_X,V_Y,V_Z
-  REAL,DIMENSION(nRE) :: Y_R,Y_PHI,Y_Z
-  REAL,DIMENSION(nRE) :: B_X,B_Y,B_Z
-  REAL,DIMENSION(nRE) :: E_X,E_Y,E_Z
-  REAL,DIMENSION(nRE) 			:: rnd1,gam
-  REAL			:: dt,a,simulation_time
-  REAL  :: Eo,gam0,v0,eta0
+  REAL(rp),PARAMETER :: C_PI = 4.0_rp*ATAN(1.0_rp) !< Definition of @f$\pi@f$
+  REAL(rp),PARAMETER :: C_E = 1.602176E-19_rp !< Absolute value of electron charge in Coulombs (C).
+  REAL(rp),PARAMETER :: C_ME = 9.109382E-31_rp !< Electron mass in kg
+  REAL(rp),PARAMETER :: C_C = 299792458.0_rp !< Light speed in m/s
+  REAL(rp),DIMENSION(nRE) :: X_X,X_Y,X_Z
+  REAL(rp),DIMENSION(nRE) :: V_X,V_Y,V_Z
+  REAL(rp),DIMENSION(nRE) :: Y_R,Y_PHI,Y_Z
+  REAL(rp),DIMENSION(nRE) :: B_X,B_Y,B_Z
+  REAL(rp),DIMENSION(nRE) :: E_X,E_Y,E_Z
+  REAL(rp),DIMENSION(nRE) 			:: rnd1,gam
+  REAL(rp)	:: dt,simulation_time
+  REAL(rp)  :: Eo,gam0,v0,eta0,chi0
+  REAL(rp)  :: v_norm,B_norm,t_norm,x_norm
   CHARACTER(100) :: path_to_outputs
   INTEGER,PARAMETER :: pchunk=1
-  REAL,DIMENSION(pchunk)     :: U_L_X,U_L_Y,U_L_Z
-  REAL,DIMENSION(pchunk)     :: U_X,U_Y,U_Z
-  REAL,DIMENSION(pchunk)     :: U_RC_X,U_RC_Y,U_RC_Z
-  REAL,DIMENSION(pchunk)     :: U_os_X,U_os_Y,U_os_Z
-  REAL,DIMENSION(pchunk)     :: U_hs_X,U_hs_Y,U_hs_Z
-  REAL,DIMENSION(pchunk)     :: tau_X,tau_Y,tau_Z
-  REAL,DIMENSION(pchunk)     :: t_X,t_Y,t_Z
-  REAL,DIMENSION(pchunk)     :: up_X,up_Y,up_Z
-  REAL,DIMENSION(pchunk)     :: cross_X,cross_Y,cross_Z
-  REAL,DIMENSION(pchunk)     :: sigma,us,gp,g0,s,Bmag
+  REAL(rp),DIMENSION(pchunk)     :: U_L_X,U_L_Y,U_L_Z
+  REAL(rp),DIMENSION(pchunk)     :: U_X,U_Y,U_Z
+  REAL(rp),DIMENSION(pchunk)     :: U_RC_X,U_RC_Y,U_RC_Z
+  REAL(rp),DIMENSION(pchunk)     :: U_os_X,U_os_Y,U_os_Z
+  REAL(rp),DIMENSION(pchunk)     :: U_hs_X,U_hs_Y,U_hs_Z
+  REAL(rp),DIMENSION(pchunk)     :: tau_X,tau_Y,tau_Z
+  REAL(rp),DIMENSION(pchunk)     :: t_X,t_Y,t_Z
+  REAL(rp),DIMENSION(pchunk)     :: up_X,up_Y,up_Z
+  REAL(rp),DIMENSION(pchunk)     :: cross_X,cross_Y,cross_Z
+  REAL(rp),DIMENSION(pchunk)     :: sigma,us,gp,g0,s,Bmag
   INTEGER,PARAMETER 	:: output_write = 202
 
   !! open output file
@@ -38,45 +40,85 @@ program main
        STATUS='UNKNOWN',FORM='FORMATTED',POSITION='REWIND')
 
   !! Initialize fields
-  B_X=0.
-  B_Y=0.
-  B_Z=1.
+  B_X=0._rp
+  B_Y=0._rp
+  B_Z=1._rp
 
-  E_X=0.
-  E_Y=0.
-  E_Z=0.
+  E_X=0._rp
+  E_Y=0._rp
+  E_Z=0._rp
+
+  write(output_write,*) '* * * * * * * * * Fields * * * * * * * * *'
+
+  write(output_write,*) 'B',B_X,B_Y,B_Z
+  write(output_write,*) 'E',E_X,E_Y,E_Z
 
   !! Initialize location
-  X_X=0.
-  X_Y=0.
-  X_Z=0.
+  X_X=0._rp
+  X_Y=0._rp
+  X_Z=0._rp
 
   !! Set kinetic energy and pitch, random gyrophase, and then velocity
-  Eo=10E6
-  eta0=10*C_PI/180
-  gam0=1+(Eo*C_E)
-  v0=C_C*sqrt(1-1/gam0**2)
+  Eo=10E6_rp
+  eta0=90._rp*C_PI/180._rp
+  gam0=1._rp+(Eo*C_E/(C_ME*C_C**2))
+  v0=C_C*sqrt(1._rp-1/gam0**2)
 
-  call RANDOM_NUMBER(rnd1)
+  !call RANDOM_NUMBER(rnd1)
+  !chi0=2*C_PI*rnd1(1)
+  chi0=0
 
-  V_X=sin(eta0)*cos(2*C_PI*rnd1)
-  V_Y=sin(eta0)*sin(2*C_PI*rnd1)
-  V_Z=v0*cos(eta0)/C_C
+  V_X=v0*sin(eta0)*cos(chi0)
+  V_Y=v0*sin(eta0)*sin(chi0)
+  V_Z=v0*cos(eta0)
   gam=gam0
+
+  v_norm=C_C
+  B_norm=B_Z(1)
+  t_norm=C_ME/(C_E*B_norm)
+  x_norm=V_norm*t_norm
+
+  X_X=X_X/x_norm
+  X_Y=X_Y/x_norm
+  X_Z=X_Z/x_norm
+
+  V_X=V_X/v_norm
+  V_Y=V_Y/v_norm
+  V_Z=V_Z/v_norm
+
+  B_X=B_X/b_norm
+  B_Y=B_Y/b_norm
+  B_Z=B_Z/b_norm
+
+  E_X=E_X/(b_norm*v_norm)
+  E_Y=E_Y/(b_norm*v_norm)
+  E_Z=E_Z/(b_norm*v_norm)
+
+  write(output_write,*) '* * * * * * * * * Initial Conditions * * * * * * * * *'
+
+  write(output_write,*) 'gam0,eta0,chi0',gam0,eta0,chi0
+  write(output_write,*) 'X0',X_X*x_norm,X_Y*x_norm,X_Z*x_norm
+  write(output_write,*) 'V0',V_X*v_norm,V_Y*v_norm,V_Z*v_norm
 
   !! Set timestep to resolve relativistic gyrofrequency, simulation time and
   !! number of time steps
-  dt = 0.01*(2.0*C_PI/(C_E*B_Z(1)/( gam0*C_ME )))
+  dt = 0.01_rp*(2.0_rp*C_PI/(C_E*B_Z(1)/( gam0*C_ME )))/t_norm
 
-  simulation_time=1E-6
+  simulation_time=1E-8/t_norm
   t_steps=ceiling(simulation_time/dt)
   dt=simulation_time/float(t_steps)
 
-  a=dt*C_E/C_ME
+  write(output_write,*) '* * * * * * * * * Timings * * * * * * * * *'
+
+  write(output_write,*) 'simulation time:',simulation_time*t_norm
+  write(output_write,*) 'dt:',dt*t_norm
+  write(output_write,*) 't_steps:',t_steps
+
+  write(output_write,*) '* * * * * * * * * Begin Orbits * * * * * * * * *'
 
   !! Particle push
   !$OMP PARALLEL DO &
-  !$OMP& FIRSTPRIVATE(dt,a,t_steps) &
+  !$OMP& FIRSTPRIVATE(dt,t_steps) &
   !$OMP& PRIVATE(pp,cc,it,g0,U_X,U_Y,U_Z,cross_X,cross_Y,cross_Z, &
   !$OMP& U_hs_X,U_hs_Y,U_hs_Z,tau_X,tau_Y,tau_Z,up_X,up_Y,up_Z, &
   !$OMP& gp,sigma,us,t_X,t_Y,t_Z,s) &
@@ -91,6 +133,8 @@ program main
         X_Z(pp-1+cc) = X_Z(pp-1+cc)+dt/2*V_Z(pp-1+cc)
      end do
      !$OMP END SIMD
+
+     write(output_write,*) 'X1/2',X_X*x_norm,X_Y*x_norm,X_Z*x_norm
 
      !! Main iteration loop
      do it=1,t_steps
@@ -116,19 +160,19 @@ program main
 
            !write(6,*) 'vcrossB',cross_X,cross_Y,cross_Z
 
-           U_hs_X(cc) = U_X(cc) + 0.5*a*(E_X(pp-1+cc) +cross_X(cc))
-           U_hs_Y(cc) = U_Y(cc) + 0.5*a*(E_Y(pp-1+cc) +cross_Y(cc))
-           U_hs_Z(cc) = U_Z(cc) + 0.5*a*(E_Z(pp-1+cc) +cross_Z(cc))
+           U_hs_X(cc) = U_X(cc) + 0.5*dt*(E_X(pp-1+cc) +cross_X(cc))
+           U_hs_Y(cc) = U_Y(cc) + 0.5*dt*(E_Y(pp-1+cc) +cross_Y(cc))
+           U_hs_Z(cc) = U_Z(cc) + 0.5*dt*(E_Z(pp-1+cc) +cross_Z(cc))
 
            !write(6,*) 'half step',0.5*a*cross_X(cc),0.5*a*cross_Y(cc),0.5*a*cross_Z(cc)
 
-           tau_X(cc) = 0.5*a*B_X(pp-1+cc)
-           tau_Y(cc) = 0.5*a*B_Y(pp-1+cc)
-           tau_Z(cc) = 0.5*a*B_Z(pp-1+cc)
+           tau_X(cc) = 0.5*dt*B_X(pp-1+cc)
+           tau_Y(cc) = 0.5*dt*B_Y(pp-1+cc)
+           tau_Z(cc) = 0.5*dt*B_Z(pp-1+cc)
 
-           up_X(cc) = U_hs_X(cc) + 0.5*a*E_X(pp-1+cc)
-           up_Y(cc) = U_hs_Y(cc) + 0.5*a*E_Y(pp-1+cc)
-           up_Z(cc) = U_hs_Z(cc) + 0.5*a*E_Z(pp-1+cc)
+           up_X(cc) = U_hs_X(cc) + 0.5*dt*E_X(pp-1+cc)
+           up_Y(cc) = U_hs_Y(cc) + 0.5*dt*E_Y(pp-1+cc)
+           up_Z(cc) = U_hs_Z(cc) + 0.5*dt*E_Z(pp-1+cc)
 
            gp(cc) = SQRT( 1.0 + up_X(cc)*up_X(cc)+up_Y(cc)*up_Y(cc)+ &
                 up_Z(cc)*up_Z(cc) )
@@ -173,6 +217,10 @@ program main
            X_Z(pp-1+cc) = X_Z(pp-1+cc) + dt*V_Z(pp-1+cc)
         end do
         !$OMP END SIMD
+
+        write(output_write,*) 'step',it
+        write(output_write,*) 'V',V_X*v_norm,V_Y*v_norm,V_Z*v_norm
+        write(output_write,*) 'X',X_X*x_norm,X_Y*x_norm,X_Z*x_norm
 
      end do
   end do
