@@ -29,8 +29,15 @@ program main
   INTEGER,PARAMETER 	:: default_unit_open = 101
   INTEGER,PARAMETER 	:: output_write = 202
   INTEGER  :: argn,read_stat
-
+  INTEGER  :: c1,c2,cr
+  REAL  :: rate
   NAMELIST /input_parameters/ nRE,pchunk,simulation_time
+
+  !! initialize system_clock
+  CALL system_clock(count_rate=cr)
+  rate = REAL(cr)
+
+  CALL system_clock(c1)
 
   !! find input/output file
   argn = command_argument_count()
@@ -146,8 +153,6 @@ program main
   write(output_write,*) 'dt:',dt*t_norm
   write(output_write,*) 't_steps:',t_steps
 
-  write(output_write,*) '* * * * * * * * * Begin Orbits * * * * * * * * *'
-
   !! Particle push
 
   !! Allocating work arrays
@@ -176,6 +181,12 @@ program main
   ALLOCATE(g0(pchunk))
   ALLOCATE(s(pchunk))
   ALLOCATE(Bmag(pchunk))
+
+  call system_clock(c2)
+
+  write(output_write,*) 'Setup time:',(c2-c1)/rate
+
+  write(output_write,*) '* * * * * * * * * Begin Orbits * * * * * * * * *'
 
   !$OMP PARALLEL DO &
   !$OMP& FIRSTPRIVATE(dt,t_steps) &
@@ -285,6 +296,10 @@ program main
      end do
   end do
   !$OMP END PARALLEL DO
+
+  call system_clock(c1)
+
+  write(output_write,*) 'Pusher time:',(c1-c2)/rate
 
   ! * * * FINALIZING SIMULATION * * *
   write(output_write,'("KORC ran successfully!")')
