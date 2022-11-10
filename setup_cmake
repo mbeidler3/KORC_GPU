@@ -54,12 +54,9 @@ then
     export FC=/opt/local/bin/gfortran-mp-11
 
     cmake -DCMAKE_BUILD_TYPE:String=$BUILD_TYPE                             \
-     -DCMAKE_Fortran_FLAGS="-O3 -msse2 -DHDF5_DOUBLE_PRESICION -fopenmp -malign-double -fconvert='big-endian'" \
-     -DCMAKE_C_FLAGS="-O3 -msse2 -fopenmp -malign-double"  \
-     -DCMAKE_CXX_FLAGS="-O3 -msse2 -fopenmp -malign-double" \
-	  -DCMAKE_Fortran_FLAGS_DEBUG="-g -ffpe-trap=invalid,zero,overflow -fimplicit-none -fbacktrace  -fsanitize=address"   \
-     -DCMAKE_C_FLAGS_DEBUG="-g -g3" \
- 	  -DCMAKE_CXX_FLAGS_DEBUG="-g -g3" \
+          -DCMAKE_Fortran_FLAGS="-O3 -fopenmp" \
+	       -DCMAKE_Fortran_FLAGS_DEBUG="-g -ffpe-trap=invalid,zero,overflow -fimplicit-none -fbacktrace  -fsanitize=address"   \
+
 
 
 
@@ -90,6 +87,18 @@ then
           -DCMAKE_CXX_FLAGS_DEBUG="-g -traceback -Bdynamic -qopt-report=5 -qopt-report-phase=vec -simd -qopenmp" \
           -DCMAKE_C_FLAGS_DEBUG="-g -traceback -Bdynamic -qopt-report=5 -qopt-report-phase=vec -simd -qopenmp" \
           -DCMAKE_Fortran_FLAGS_DEBUG="-convert big_endian -g -traceback -check all -Bdynamic -debug inline-debug-info -qopt-report=5 -qopt-report-phase=vec -qoverride-limits -simd -qopenmp" \
+
+ elif [ $LMOD_SYSHOST == "perlmutter"   ]
+ then
+
+     #  Config for NERSC Perlmutter.
+     module load cmake
+     module unload darshan/3.1.4
+
+     # USING GNU
+     cmake -DCMAKE_BUILD_TYPE:String=$BUILD_TYPE                                          \
+           -DCMAKE_Fortran_FLAGS="-O3 -fopenmp"  \
+           -DCMAKE_Fortran_FLAGS_DEBUG="-g -fbacktrace -fcheck=all -ffpe-summary=all" \
 
  elif [ $MACHINE_ID == "or-condo-glogin01.ornl.gov"   ]
  then

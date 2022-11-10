@@ -4,40 +4,72 @@ program main
 
   INTEGER,PARAMETER 	:: rp = KIND(0.d0)
   INTEGER :: it,pp,cc,t_steps
-  INTEGER,PARAMETER :: nRE=1
+  INTEGER :: nRE
   REAL(rp),PARAMETER :: C_PI = 4.0_rp*ATAN(1.0_rp) !< Definition of @f$\pi@f$
   REAL(rp),PARAMETER :: C_E = 1.602176E-19_rp !< Absolute value of electron charge in Coulombs (C).
   REAL(rp),PARAMETER :: C_ME = 9.109382E-31_rp !< Electron mass in kg
   REAL(rp),PARAMETER :: C_C = 299792458.0_rp !< Light speed in m/s
-  REAL(rp),DIMENSION(nRE) :: X_X,X_Y,X_Z
-  REAL(rp),DIMENSION(nRE) :: V_X,V_Y,V_Z
-  REAL(rp),DIMENSION(nRE) :: Y_R,Y_PHI,Y_Z
-  REAL(rp),DIMENSION(nRE) :: B_X,B_Y,B_Z
-  REAL(rp),DIMENSION(nRE) :: E_X,E_Y,E_Z
-  REAL(rp),DIMENSION(nRE) 			:: rnd1,gam
+  REAL(rp),ALLOCATABLE,DIMENSION(:) :: X_X,X_Y,X_Z
+  REAL(rp),ALLOCATABLE,DIMENSION(:) :: V_X,V_Y,V_Z
+  REAL(rp),ALLOCATABLE,DIMENSION(:) :: B_X,B_Y,B_Z
+  REAL(rp),ALLOCATABLE,DIMENSION(:) :: E_X,E_Y,E_Z
+  REAL(rp),ALLOCATABLE,DIMENSION(:) :: rnd1,gam
   REAL(rp)	:: dt,simulation_time
   REAL(rp)  :: Eo,gam0,v0,eta0,chi0
   REAL(rp)  :: v_norm,B_norm,t_norm,x_norm
-  CHARACTER(100) :: path_to_outputs
-  INTEGER,PARAMETER :: pchunk=1
-  REAL(rp),DIMENSION(pchunk)     :: U_L_X,U_L_Y,U_L_Z
-  REAL(rp),DIMENSION(pchunk)     :: U_X,U_Y,U_Z
-  REAL(rp),DIMENSION(pchunk)     :: U_RC_X,U_RC_Y,U_RC_Z
-  REAL(rp),DIMENSION(pchunk)     :: U_os_X,U_os_Y,U_os_Z
-  REAL(rp),DIMENSION(pchunk)     :: U_hs_X,U_hs_Y,U_hs_Z
-  REAL(rp),DIMENSION(pchunk)     :: tau_X,tau_Y,tau_Z
-  REAL(rp),DIMENSION(pchunk)     :: t_X,t_Y,t_Z
-  REAL(rp),DIMENSION(pchunk)     :: up_X,up_Y,up_Z
-  REAL(rp),DIMENSION(pchunk)     :: cross_X,cross_Y,cross_Z
-  REAL(rp),DIMENSION(pchunk)     :: sigma,us,gp,g0,s,Bmag
+  CHARACTER(100) :: path_to_inputs,path_to_outputs
+  INTEGER :: pchunk
+  REAL(rp),ALLOCATABLE,DIMENSION(:)     :: U_X,U_Y,U_Z
+  REAL(rp),ALLOCATABLE,DIMENSION(:)     :: U_hs_X,U_hs_Y,U_hs_Z
+  REAL(rp),ALLOCATABLE,DIMENSION(:)     :: tau_X,tau_Y,tau_Z
+  REAL(rp),ALLOCATABLE,DIMENSION(:)     :: t_X,t_Y,t_Z
+  REAL(rp),ALLOCATABLE,DIMENSION(:)     :: up_X,up_Y,up_Z
+  REAL(rp),ALLOCATABLE,DIMENSION(:)     :: cross_X,cross_Y,cross_Z
+  REAL(rp),ALLOCATABLE,DIMENSION(:)     :: sigma,us,gp,g0,s,Bmag
+  INTEGER,PARAMETER 	:: default_unit_open = 101
   INTEGER,PARAMETER 	:: output_write = 202
+  INTEGER  :: argn,read_stat
+
+  NAMELIST /input_parameters/ nRE,pchunk,simulation_time
+
+  !! find input/output file
+  argn = command_argument_count()
+
+  call get_command_argument(1,path_to_inputs)
+  call get_command_argument(2,path_to_outputs)
 
   !! open output file
-  call get_command_argument(1,path_to_outputs)
-
   OPEN(UNIT=output_write, &
        FILE=TRIM(path_to_outputs)//"output.korc", &
        STATUS='UNKNOWN',FORM='FORMATTED',POSITION='REWIND')
+
+  !! set defaults for inputs, open input file, read from input file
+
+  nRE=1
+  pchunk=1
+  simulation_time=0._rp
+
+  OPEN(UNIT=default_unit_open,FILE=TRIM(path_to_inputs), &
+       STATUS='OLD',FORM='formatted',POSITION='REWIND')
+  read(default_unit_open,nml=input_parameters,IOSTAT=read_stat)
+  close(default_unit_open)
+
+  !! Allocate solution fields
+
+  ALLOCATE(X_X(nRE))
+  ALLOCATE(X_Y(nRE))
+  ALLOCATE(X_Z(nRE))
+  ALLOCATE(V_X(nRE))
+  ALLOCATE(V_Y(nRE))
+  ALLOCATE(V_Z(nRE))
+  ALLOCATE(B_X(nRE))
+  ALLOCATE(B_Y(nRE))
+  ALLOCATE(B_Z(nRE))
+  ALLOCATE(E_X(nRE))
+  ALLOCATE(E_Y(nRE))
+  ALLOCATE(E_Z(nRE))
+  ALLOCATE(rnd1(nRE))
+  ALLOCATE(gam(nRE))
 
   !! Initialize fields
   B_X=0._rp
@@ -104,7 +136,7 @@ program main
   !! number of time steps
   dt = 0.01_rp*(2.0_rp*C_PI/(C_E*B_Z(1)/( gam0*C_ME )))/t_norm
 
-  simulation_time=1E-8/t_norm
+  simulation_time=simulation_time/t_norm
   t_steps=ceiling(simulation_time/dt)
   dt=simulation_time/float(t_steps)
 
@@ -117,6 +149,34 @@ program main
   write(output_write,*) '* * * * * * * * * Begin Orbits * * * * * * * * *'
 
   !! Particle push
+
+  !! Allocating work arrays
+
+  ALLOCATE(U_X(pchunk))
+  ALLOCATE(U_Y(pchunk))
+  ALLOCATE(U_Z(pchunk))
+  ALLOCATE(U_hs_X(pchunk))
+  ALLOCATE(U_hs_Y(pchunk))
+  ALLOCATE(U_hs_Z(pchunk))
+  ALLOCATE(tau_X(pchunk))
+  ALLOCATE(tau_Y(pchunk))
+  ALLOCATE(tau_Z(pchunk))
+  ALLOCATE(t_X(pchunk))
+  ALLOCATE(t_Y(pchunk))
+  ALLOCATE(t_Z(pchunk))
+  ALLOCATE(up_X(pchunk))
+  ALLOCATE(up_Y(pchunk))
+  ALLOCATE(up_Z(pchunk))
+  ALLOCATE(cross_X(pchunk))
+  ALLOCATE(cross_Y(pchunk))
+  ALLOCATE(cross_Z(pchunk))
+  ALLOCATE(sigma(pchunk))
+  ALLOCATE(us(pchunk))
+  ALLOCATE(gp(pchunk))
+  ALLOCATE(g0(pchunk))
+  ALLOCATE(s(pchunk))
+  ALLOCATE(Bmag(pchunk))
+
   !$OMP PARALLEL DO &
   !$OMP& FIRSTPRIVATE(dt,t_steps) &
   !$OMP& PRIVATE(pp,cc,it,g0,U_X,U_Y,U_Z,cross_X,cross_Y,cross_Z, &
