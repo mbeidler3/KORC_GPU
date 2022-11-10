@@ -27,7 +27,7 @@ program main
   REAL(rp),ALLOCATABLE,DIMENSION(:)     :: cross_X,cross_Y,cross_Z
   REAL(rp),ALLOCATABLE,DIMENSION(:)     :: sigma,us,gp,g0,s,Bmag
   INTEGER,PARAMETER 	:: default_unit_open = 101
-  INTEGER,PARAMETER 	:: output_write = 202
+  INTEGER,PARAMETER 	:: output_write = 202,data_write = 102
   INTEGER  :: argn,read_stat
   INTEGER  :: c1,c2,cr
   REAL  :: rate
@@ -45,10 +45,14 @@ program main
   call get_command_argument(1,path_to_inputs)
   call get_command_argument(2,path_to_outputs)
 
-  !! open output file
-  OPEN(UNIT=output_write, &
-       FILE=TRIM(path_to_outputs)//"output.korc", &
+  !! open log and data output files
+  OPEN(UNIT=data_write, &
+       FILE=TRIM(path_to_outputs)//"data.korc", &
        STATUS='UNKNOWN',FORM='FORMATTED',POSITION='REWIND')
+
+  OPEN(UNIT=output_write, &
+      FILE=TRIM(path_to_outputs)//"output.korc", &
+      STATUS='UNKNOWN',FORM='FORMATTED',POSITION='REWIND')
 
   !! set defaults for inputs, open input file, read from input file
 
@@ -138,6 +142,8 @@ program main
   write(output_write,*) 'gam0,eta0,chi0',gam0,eta0,chi0
   write(output_write,*) 'X0',X_X*x_norm,X_Y*x_norm,X_Z*x_norm
   write(output_write,*) 'V0',V_X*v_norm,V_Y*v_norm,V_Z*v_norm
+  write(data_write,*) 'X0',X_X*x_norm,X_Y*x_norm,X_Z*x_norm
+  write(data_write,*) 'V0',V_X*v_norm,V_Y*v_norm,V_Z*v_norm
 
   !! Set timestep to resolve relativistic gyrofrequency, simulation time and
   !! number of time steps
@@ -205,7 +211,7 @@ program main
      end do
      !$OMP END SIMD
 
-     write(output_write,*) 'X1/2',X_X*x_norm,X_Y*x_norm,X_Z*x_norm
+     write(data_write,*) 'X1/2',X_X*x_norm,X_Y*x_norm,X_Z*x_norm
 
      !! Main iteration loop
      do it=1,t_steps
@@ -289,9 +295,9 @@ program main
         end do
         !$OMP END SIMD
 
-        write(output_write,*) 'step',it
-        write(output_write,*) 'V',V_X*v_norm,V_Y*v_norm,V_Z*v_norm
-        write(output_write,*) 'X',X_X*x_norm,X_Y*x_norm,X_Z*x_norm
+        write(data_write,*) 'step',it
+        write(data_write,*) 'V',V_X*v_norm,V_Y*v_norm,V_Z*v_norm
+        write(data_write,*) 'X',X_X*x_norm,X_Y*x_norm,X_Z*x_norm
 
      end do
   end do
@@ -304,5 +310,6 @@ program main
   ! * * * FINALIZING SIMULATION * * *
   write(output_write,'("KORC ran successfully!")')
   close(output_write)
+  close(data_write)
 
 end program main
