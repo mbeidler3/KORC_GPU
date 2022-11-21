@@ -18,7 +18,6 @@ program main
    REAL(rp)  :: Eo,gam0,v0,eta0,chi0
    REAL(rp)  :: v_norm,B_norm,t_norm,x_norm
    CHARACTER(100) :: path_to_inputs,path_to_outputs
-   INTEGER :: pchunk
    REAL(rp)     :: U_X,U_Y,U_Z
    REAL(rp)    :: U_hs_X,U_hs_Y,U_hs_Z
    REAL(rp)    :: tau_X,tau_Y,tau_Z
@@ -31,7 +30,7 @@ program main
    INTEGER  :: argn,read_stat
    INTEGER  :: c1,c2,cr
    REAL  :: rate
-   NAMELIST /input_parameters/ nRE,pchunk,simulation_time
+   NAMELIST /input_parameters/ nRE,simulation_time
 
    !! initialize system_clock
    CALL system_clock(count_rate=cr)
@@ -57,7 +56,6 @@ program main
    !! set defaults for inputs, open input file, read from input file
 
    nRE=1
-   pchunk=1
    simulation_time=0._rp
 
    OPEN(UNIT=default_unit_open,FILE=TRIM(path_to_inputs), &
@@ -169,12 +167,7 @@ program main
 
    write(output_write,*) '* * * * * * * * * Begin Orbits * * * * * * * * *'
 
-   !$OMP PARALLEL DO &
-   !$OMP& FIRSTPRIVATE(dt,t_steps) &
-   !$OMP& PRIVATE(pp,it,g0,U_X,U_Y,U_Z,cross_X,cross_Y,cross_Z, &
-   !$OMP& U_hs_X,U_hs_Y,U_hs_Z,tau_X,tau_Y,tau_Z,up_X,up_Y,up_Z, &
-   !$OMP& gp,sigma,us,t_X,t_Y,t_Z,s) &
-   !$OMP& SHARED(X_X,X_Y,X_Z,V_X,V_Y,V_Z,B_X,B_Y,B_Z,E_X,E_Y,E_Z,gam)
+   !$acc parallel loop
    do pp=1,nRE
 
       !! Initial half step
@@ -249,8 +242,9 @@ program main
 
       end do
    end do
-   !$OMP END PARALLEL DO
+   !$acc end parallel loop
 
+   write(output_write,*) '* * * * * * * * * Initial Conditions * * * * * * * * *'
    write(data_write,*) 'V',V_X*v_norm,V_Y*v_norm,V_Z*v_norm
    write(data_write,*) 'X',X_X*x_norm,X_Y*x_norm,X_Z*x_norm
 
