@@ -91,8 +91,8 @@ program main
 
    write(output_write,*) '* * * * * * * * * Fields * * * * * * * * *'
 
-   write(output_write,*) 'B',B_X,B_Y,B_Z
-   write(output_write,*) 'E',E_X,E_Y,E_Z
+   write(output_write,*) 'B',B_X(1),B_Y(1),B_Z(1)
+   write(output_write,*) 'E',E_X(1),E_Y(1),E_Z(1)
 
    !! Initialize location
    X_X=0._rp
@@ -137,11 +137,12 @@ program main
 
    write(output_write,*) '* * * * * * * * * Initial Conditions * * * * * * * * *'
 
-   write(output_write,*) 'gam0,eta0,chi0',gam0,eta0,chi0
-   write(output_write,*) 'X0',X_X*x_norm,X_Y*x_norm,X_Z*x_norm
-   write(output_write,*) 'V0',V_X*v_norm,V_Y*v_norm,V_Z*v_norm
-   write(data_write,*) 'X0',X_X*x_norm,X_Y*x_norm,X_Z*x_norm
-   write(data_write,*) 'V0',V_X*v_norm,V_Y*v_norm,V_Z*v_norm
+   write(output_write,*) 'Number of electrons: ',nRE
+   write(output_write,*) 'gam0,eta0,chi0: ',gam0,eta0,chi0
+   write(output_write,*) 'X0: ',X_X(1)*x_norm,X_Y(1)*x_norm,X_Z(1)*x_norm
+   write(output_write,*) 'V0: ',V_X(1)*v_norm,V_Y(1)*v_norm,V_Z(1)*v_norm
+   write(data_write,*) 'X0: ',X_X(1)*x_norm,X_Y(1)*x_norm,X_Z(1)*x_norm
+   write(data_write,*) 'V0: ',V_X(1)*v_norm,V_Y(1)*v_norm,V_Z(1)*v_norm
 
    !! Set timestep to resolve relativistic gyrofrequency, simulation time and
    !! number of time steps
@@ -245,8 +246,8 @@ program main
    !$acc end parallel loop
 
    write(output_write,*) '* * * * * * * * * Initial Conditions * * * * * * * * *'
-   write(data_write,*) 'V',V_X*v_norm,V_Y*v_norm,V_Z*v_norm
-   write(data_write,*) 'X',X_X*x_norm,X_Y*x_norm,X_Z*x_norm
+   write(data_write,*) 'V: ',V_X(1)*v_norm,V_Y(1)*v_norm,V_Z(1)*v_norm
+   write(data_write,*) 'X: ',X_X(1)*x_norm,X_Y(1)*x_norm,X_Z(1)*x_norm
 
    call system_clock(c1)
 
