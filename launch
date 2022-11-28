@@ -1,26 +1,37 @@
 #!/bin/bash
 
 _platform_match_mattlaptop() {
+
   echo
 }
+
 
 _platform_match_perlmutter() {
+
   echo
 }
+
 
 _platform_setup_mattlaptop() {
+
   echo
 }
+
 
 _platform_setup_perlmutter() {
+
   echo
 }
+
 
 _scenario_build_gpu_trial1() {
+
   echo
 }
 
+
 _scenario_test_gpu_trial1() {
+
   echo
 }
 
