@@ -16,11 +16,34 @@ _platform_setup_perlmutter() {
   echo
 }
 
-_scenario_gpu_trial1() {
+_scenario_build_gpu_trial1() {
   echo
+}
+
+_scenario_test_gpu_trial1() {
+  echo
+}
+
+
+__setup() {
+
+  _platform_setup_perlmutter
+}
+
+
+__build() {
+
+  _scenario_build_gpu_trial1
+}
+
+
+__test() {
+
+  _scenario_test_gpu_trial1
 }
 
 
 __setup
 __build
+__test
 
