@@ -26,16 +26,19 @@ _platform_perlmutter_setup() {
 }
 
 
-_scenario_gpu_trial1_mattlaptop() {
+_scenario_gpu_trial1_mattlaptop_build() {
 
   echo
 }
 
 
-_scenario_gpu_trial1_perlmutter() {
+_scenario_gpu_trial1_mattlaptop_run() {
 
-  local launchkit_build_dir
-  local launchkit_dugout_dir
+  echo
+}
+
+
+_scenario_gpu_trial1_perlmutter_build() {
 
   rm -rf ./build
 
@@ -47,9 +50,15 @@ _scenario_gpu_trial1_perlmutter() {
       -DCMAKE_Fortran_FLAGS_DEBUG="-Minfo=all" \
     ..
 
-  launchkit_build_dir="$(pwd -P)"
+  LAUNCHKIT_RUNTIME_PATH_EXE="$(pwd -P)/"
 
   cd - >/dev/null
+}
+
+
+_scenario_gpu_trial1_perlmutter_run() {
+
+  local readonly binexe="$1"
 
   cd $(mktemp -d) || return 1
   mkdir .launchkit && cd $_
@@ -71,7 +80,7 @@ _scenario_gpu_trial1_perlmutter() {
 	#SBATCH --gpu-bind=none
 
 	export SLURM_CPU_BIND="cores"
-	srun nsys profile -o thinger --stats=true ${launchkit_build_dir}/foobaz.exe
+	srun nsys profile -o thinger --stats=true $LAUNCHKIT_RUNTIME_PATH_EXE
 
 	__EOF__
 
@@ -94,12 +103,16 @@ __setup() {
 
 __build_then_run() {
 
-  _scenario_gpu_trial1_perlmutter
+  _scenario_gpu_trial1_perlmutter_build
+  _scenario_gpu_trial1_perlmutter_run
 }
 
 
+LAUNCHKIT_RUNTIME_PATH_EXE=""
+
 
 #__setup
-__build_then_run
+__build
+__run
 
 
