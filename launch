@@ -41,17 +41,20 @@ _scenario_gpu_trial1_perlmutter() {
 
   mkdir ./build && cd $_
 
-  cmake \
-      -DCMAKE_BUILD_TYPE="Debug" \
-      -DCMAKE_Fortran_FLAGS="-fast -mp=gpu -gpu=cc80 -Mfree" \
-      -DCMAKE_Fortran_FLAGS_DEBUG="-Minfo=all" \
-    ..
+  #cmake \
+  #    -DCMAKE_BUILD_TYPE="Debug" \
+  #    -DCMAKE_Fortran_FLAGS="-fast -mp=gpu -gpu=cc80 -Mfree" \
+  #    -DCMAKE_Fortran_FLAGS_DEBUG="-Minfo=all" \
+  #  ..
 
   launchkit_build_dir="$(pwd -P)"
 
   cd - >/dev/null
 
   cd $(mktemp -d) || return 1
+  mkdir .launchkit && cd $_
+
+  launchkit_dugout_dir="$(pwd -P)"
 
   cat > ./slurm_job.sh <<-__EOF__
 
@@ -77,6 +80,8 @@ _scenario_gpu_trial1_perlmutter() {
 
   cd - >/dev/null
 
+  # cleanup temp dir
+  [[ ${launchkit_dugout_dir%/*} =~ .+/tmp\..+ ]] && rm -rf ${launchkit_dugout_dir%/*}
 }
 
 
@@ -87,14 +92,14 @@ __setup() {
 }
 
 
-__build_and_run() {
+__build_then_run() {
 
   _scenario_gpu_trial1_perlmutter
 }
 
 
 
-__setup
-__build_and_test
+#__setup
+__build_then_run
 
 
