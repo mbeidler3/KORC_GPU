@@ -101,7 +101,7 @@ __setup() {
 }
 
 
-__build_then_run() {
+__build_and_run() {
 
   _scenario_gpu_trial1_perlmutter_build
   _scenario_gpu_trial1_perlmutter_run
@@ -111,8 +111,8 @@ __build_then_run() {
 LAUNCHKIT_RUNTIME_PATH_EXE=""
 
 
-#__setup
-__build
-__run
+__setup
+__build_and_run
+
 
 
