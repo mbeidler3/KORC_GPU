@@ -34,15 +34,49 @@ _scenario_gpu_trial1_mattlaptop() {
 
 _scenario_gpu_trial1_perlmutter() {
 
-  mkdir -p ./build && cd $_
+  local launchkit_build_dir
+  local launchkit_dugout_dir
+
+  rm -rf ./build
+
+  mkdir ./build && cd $_
 
   cmake \
-      -DCMAKE_BUILD_TYPE="Release" \
+      -DCMAKE_BUILD_TYPE="Debug" \
       -DCMAKE_Fortran_FLAGS="-fast -mp=gpu -gpu=cc80 -Mfree" \
       -DCMAKE_Fortran_FLAGS_DEBUG="-Minfo=all" \
     ..
 
+  launchkit_build_dir="$(pwd -P)"
+
   cd - >/dev/null
+
+  cd $(mktemp -d) || return 1
+
+  cat > ./slurm_job.sh <<-__EOF__
+
+	#!/bin/bash
+
+	#SBATCH -A ntrain1
+	#SBATCH -C gpu
+	#SBATCH -q regular
+	#SBATCH -t 1:00:00
+	#SBATCH -N 1
+	#SBATCH --ntasks-per-node=1
+	#SBATCH -c 128
+	#SBATCH --gpus-per-task=1
+	#SBATCH --gpu-bind=none
+
+	export SLURM_CPU_BIND="cores"
+	srun nsys profile -o thinger --stats=true ${launchkit_build_dir}/foobaz.exe
+
+	__EOF__
+
+  echo "."; echo "."; cat ./slurm_job.sh
+  echo "."; echo "."
+
+  cd - >/dev/null
+
 }
 
 
@@ -53,7 +87,7 @@ __setup() {
 }
 
 
-__build_and_test() {
+__build_and_run() {
 
   _scenario_gpu_trial1_perlmutter
 }
