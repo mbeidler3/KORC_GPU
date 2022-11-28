@@ -1,24 +1,24 @@
 #!/bin/bash
 
-_platform_match_mattlaptop() {
+_platform_mattlaptop_match() {
 
   echo
 }
 
 
-_platform_match_perlmutter() {
+_platform_mattlaptop_setup() {
 
   echo
 }
 
 
-_platform_setup_mattlaptop() {
+_platform_perlmutter_match() {
 
   echo
 }
 
 
-_platform_setup_perlmutter() {
+_platform_perlmutter_setup() {
 
   module load cmake
   module unload darshan/3.1.4
@@ -26,37 +26,41 @@ _platform_setup_perlmutter() {
 }
 
 
-_scenario_build_gpu_trial1() {
+_scenario_gpu_trial1_mattlaptop() {
 
   echo
 }
 
 
-_scenario_test_gpu_trial1() {
+_scenario_gpu_trial1_perlmutter() {
 
-  echo
+  mkdir -p ./build && cd $_
+
+  cmake \
+      -DCMAKE_BUILD_TYPE="Release" \
+      -DCMAKE_Fortran_FLAGS="-fast -mp=gpu -gpu=cc80 -Mfree" \
+      -DCMAKE_Fortran_FLAGS_DEBUG="-Minfo=all" \
+    ..
+
+  cd - >/dev/null
 }
+
 
 
 __setup() {
 
-  _platform_setup_perlmutter
+  _platform_perlmutter_setup
 }
 
 
-__build() {
+__build_and_test() {
 
-  _scenario_build_gpu_trial1
+  _scenario_gpu_trial1_perlmutter
 }
 
-
-__test() {
-
-  _scenario_test_gpu_trial1
-}
 
 
 __setup
-__build
-__test
+__build_and_test
+
 
