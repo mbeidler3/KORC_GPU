@@ -30,7 +30,19 @@ _platform_perlmutter_setup() {
 
 _scenario_gpu_trial1_mattlaptop_build() {
 
-  echo
+  rm -rf ./build
+  mkdir ./build && cd $_
+
+  cmake \
+      -DCMAKE_BUILD_TYPE="Debug" \
+      -DCMAKE_Fortran_FLAGS="-O3 -fopenmp" \
+      -DCMAKE_Fortran_FLAGS_DEBUG="-g -ffpe-trap=invalid,zero,overflow -fimplicit-none -fbacktrace  -fsanitize=address" \
+    ..
+
+  [[ $? -eq 0 ]] && make
+
+  LAUNCHKIT_RUNTIME_PATH_EXE="$(pwd -P)/build/bin/xkorc"
+  cd - >/dev/null
 }
 
 
@@ -43,7 +55,6 @@ _scenario_gpu_trial1_mattlaptop_run() {
 _scenario_gpu_trial1_perlmutter_build() {
 
   rm -rf ./build
-
   mkdir ./build && cd $_
 
   cmake \
@@ -55,7 +66,6 @@ _scenario_gpu_trial1_perlmutter_build() {
   [[ $? -eq 0 ]] && make
 
   LAUNCHKIT_RUNTIME_PATH_EXE="$(pwd -P)/build/bin/xkorc"
-
   cd - >/dev/null
 }
 
