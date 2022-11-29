@@ -68,7 +68,6 @@ _scenario_gpu_trial1_perlmutter_run() {
   launchkit_dugout_dir="$(pwd -P)"
 
   cat > ./slurm_job.sh <<-__EOF__
-
 	#!/bin/bash
 
 	#SBATCH -A ntrain1
@@ -88,6 +87,8 @@ _scenario_gpu_trial1_perlmutter_run() {
 
   echo "."; echo "."; cat ./slurm_job.sh
   echo "."; echo "."
+
+  sbatch ./slurm_job.sh
 
   cd - >/dev/null
 
