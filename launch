@@ -2,19 +2,21 @@
 
 _platform_mattlaptop_match() {
 
-  echo
+  [[ $(uname -n) =~ MBP115573 ]] || return 1
 }
 
 
 _platform_mattlaptop_setup() {
 
-  echo
+  export CC=/opt/local/bin/gcc-mp-11
+  export CXX=/opt/local/bin/g++-mp-11
+  export FC=/opt/local/bin/gfortran-mp-11
 }
 
 
 _platform_perlmutter_match() {
 
-  echo
+  [[ $LMOD_SYSHOST =~ perlmutter ]] || return 1
 }
 
 
@@ -100,18 +102,26 @@ _scenario_gpu_trial1_perlmutter_run() {
 
 __setup() {
 
-  _platform_perlmutter_setup
+  local match_count=0
+
+  [[ -n $LAUNCHKIT_PLATFORM ]] && return
+
+  _platform_perlmutter_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="perlmutter"
+  _platform_mattlaptop_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="mattlaptop"
 }
 
 
 __build_and_run() {
 
-  _scenario_gpu_trial1_perlmutter_build
-  _scenario_gpu_trial1_perlmutter_run
+  local readonly platform="$LAUNCHKIT_PLATFORM"
+
+  _scenario_gpu_trial1_${platform}_build
+  _scenario_gpu_trial1_${platform}_run
 }
 
 
 LAUNCHKIT_RUNTIME_PATH_EXE=""
+LAUNCHKIT_PLATFORM=""
 
 
 __setup
