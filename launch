@@ -64,7 +64,7 @@ _scenario_gpu_trial1_mattlaptop_build() {
   cmake \
       -DCMAKE_BUILD_TYPE="Debug" \
       -DCMAKE_Fortran_FLAGS="-O3 -fopenmp" \
-      -DCMAKE_Fortran_FLAGS_DEBUG="-g -ffpe-trap=invalid,zero,overflow -fimplicit-none -fbacktrace  -fsanitize=address" \
+      -DCMAKE_Fortran_FLAGS_DEBUG="-g -ffpe-trap=invalid,zero,overflow -fimplicit-none -fbacktrace -fsanitize=address" \
     ..
 
   [[ $? -eq 0 ]] && make
