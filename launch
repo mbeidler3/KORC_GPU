@@ -1,5 +1,33 @@
 #!/bin/bash
 
+_error() {
+
+  local readonly msg="$1"
+
+  echo "."
+  echo "."
+  echo "launchkit >> [Error] << ${msg}"
+  echo "."
+  echo "."
+
+  return 1
+}
+
+
+_error_fatal() {
+
+  local readonly msg="$1"
+
+  echo "."
+  echo "."
+  echo "launchkit >> [Fatal Error] << ${msg}"
+  echo "."
+  echo "."
+
+  exit 1
+}
+
+
 _platform_mattlaptop_match() {
 
   [[ $(uname -n) =~ MBP115573 ]] || return 1
@@ -114,6 +142,8 @@ __platform_match() {
 
   _platform_perlmutter_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="perlmutter"
   _platform_mattlaptop_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="mattlaptop"
+
+  [[ ${match_count} -eq 1 ]] || _error_fatal "unable to select platform"
 }
 
 
@@ -136,7 +166,7 @@ LAUNCHKIT_RUNTIME_PATH_EXE=""
 LAUNCHKIT_PLATFORM=""
 
 
-__platform_match
+__platform_match ; exit
 __platform_setup
 
 __build_and_run
