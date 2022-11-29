@@ -50,7 +50,9 @@ _scenario_gpu_trial1_perlmutter_build() {
       -DCMAKE_Fortran_FLAGS_DEBUG="-Minfo=all" \
     ..
 
-  LAUNCHKIT_RUNTIME_PATH_EXE="$(pwd -P)/"
+  [[ $? -eq 0 ]] && make
+
+  LAUNCHKIT_RUNTIME_PATH_EXE="$(pwd -P)/build/bin/xkorc"
 
   cd - >/dev/null
 }
