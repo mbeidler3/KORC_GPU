@@ -100,7 +100,7 @@ _scenario_gpu_trial1_perlmutter_run() {
 
 
 
-__setup() {
+__platform_match() {
 
   local match_count=0
 
@@ -108,6 +108,12 @@ __setup() {
 
   _platform_perlmutter_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="perlmutter"
   _platform_mattlaptop_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="mattlaptop"
+}
+
+
+__platform_setup() {
+
+  echo
 }
 
 
@@ -124,7 +130,9 @@ LAUNCHKIT_RUNTIME_PATH_EXE=""
 LAUNCHKIT_PLATFORM=""
 
 
-__setup
+__platform_match
+__platform_setup
+
 __build_and_run
 
 
