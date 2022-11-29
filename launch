@@ -149,7 +149,9 @@ __platform_match() {
 
 __platform_setup() {
 
-  echo
+  local readonly platform="$LAUNCHKIT_PLATFORM"
+
+  _platform_${platform}_setup
 }
 
 
@@ -166,7 +168,7 @@ LAUNCHKIT_RUNTIME_PATH_EXE=""
 LAUNCHKIT_PLATFORM=""
 
 
-__platform_match ; exit
+__platform_match
 __platform_setup
 
 __build_and_run
