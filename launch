@@ -72,11 +72,8 @@ _scenario_gpu_trial1_perlmutter_build() {
 
 _scenario_gpu_trial1_perlmutter_run() {
 
-  local readonly binexe="$1"
-
   cd $(mktemp -d) || return 1
   mkdir .launchkit && cd $_
-
   launchkit_dugout_dir="$(pwd -P)"
 
   cat > ./slurm_job.sh <<-__EOF__
