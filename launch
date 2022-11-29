@@ -106,7 +106,6 @@ _scenario_gpu_trial1_perlmutter_run() {
 }
 
 
-
 __platform_match() {
 
   local match_count=0
