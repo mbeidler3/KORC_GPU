@@ -1,0 +1,177 @@
+#!/bin/bash
+
+_error() {
+
+  local readonly msg="$1"
+
+  echo "."
+  echo "."
+  echo "launchkit >> [Error] << ${msg}"
+  echo "."
+  echo "."
+
+  return 1
+}
+
+
+_error_fatal() {
+
+  local readonly msg="$1"
+
+  echo "."
+  echo "."
+  echo "launchkit >> [Fatal Error] << ${msg}"
+  echo "."
+  echo "."
+
+  exit 1
+}
+
+
+_platform_mattlaptop_match() {
+
+  [[ $(uname -n) =~ MBP115573 ]] || return 1
+}
+
+
+_platform_mattlaptop_setup() {
+
+  export CC=/opt/local/bin/gcc-mp-11
+  export CXX=/opt/local/bin/g++-mp-11
+  export FC=/opt/local/bin/gfortran-mp-11
+}
+
+
+_platform_perlmutter_match() {
+
+  [[ $LMOD_SYSHOST =~ perlmutter ]] || return 1
+}
+
+
+_platform_perlmutter_setup() {
+
+  module load cmake
+  module unload darshan/3.1.4
+  module load nvidia
+}
+
+
+_scenario_gpu_trial1_mattlaptop_build() {
+
+  rm -rf ./build
+  mkdir ./build && cd $_
+
+  cmake \
+      -DCMAKE_BUILD_TYPE="Debug" \
+      -DCMAKE_Fortran_FLAGS="-O3 -fopenmp" \
+      -DCMAKE_Fortran_FLAGS_DEBUG="-g -ffpe-trap=invalid,zero,overflow -fimplicit-none -fbacktrace -fsanitize=address" \
+    ..
+
+  [[ $? -eq 0 ]] && make
+
+  LAUNCHKIT_RUNTIME_PATH_EXE="$(pwd -P)/build/bin/xkorc"
+  cd - >/dev/null
+}
+
+
+_scenario_gpu_trial1_mattlaptop_run() {
+
+  echo
+}
+
+
+_scenario_gpu_trial1_perlmutter_build() {
+
+  rm -rf ./build
+  mkdir ./build && cd $_
+
+  cmake \
+      -DCMAKE_BUILD_TYPE="Debug" \
+      -DCMAKE_Fortran_FLAGS="-fast -mp=gpu -gpu=cc80 -Mfree" \
+      -DCMAKE_Fortran_FLAGS_DEBUG="-Minfo=all" \
+    ..
+
+  [[ $? -eq 0 ]] && make
+
+  LAUNCHKIT_RUNTIME_PATH_EXE="$(pwd -P)/build/bin/xkorc"
+  cd - >/dev/null
+}
+
+
+_scenario_gpu_trial1_perlmutter_run() {
+
+  cd $(mktemp -d) || return 1
+  mkdir .launchkit && cd $_
+  launchkit_dugout_dir="$(pwd -P)"
+
+  cat > ./slurm_job.sh <<-__EOF__
+	#!/bin/bash
+
+	#SBATCH -A ntrain1
+	#SBATCH -C gpu
+	#SBATCH -q regular
+	#SBATCH -t 1:00:00
+	#SBATCH -N 1
+	#SBATCH --ntasks-per-node=1
+	#SBATCH -c 128
+	#SBATCH --gpus-per-task=1
+	#SBATCH --gpu-bind=none
+
+	export SLURM_CPU_BIND="cores"
+	srun nsys profile -o thinger --stats=true $LAUNCHKIT_RUNTIME_PATH_EXE
+
+	__EOF__
+
+  echo "."; echo "."; cat ./slurm_job.sh
+  echo "."; echo "."
+
+  sbatch ./slurm_job.sh
+
+  cd - >/dev/null
+
+  # cleanup temp dir
+  [[ ${launchkit_dugout_dir%/*} =~ .+/tmp\..+ ]] && rm -rf ${launchkit_dugout_dir%/*}
+}
+
+
+__platform_match() {
+
+  local match_count=0
+
+  [[ -n $LAUNCHKIT_PLATFORM ]] && return
+
+  _platform_perlmutter_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="perlmutter"
+  _platform_mattlaptop_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="mattlaptop"
+
+  [[ ${match_count} -eq 1 ]] || _error_fatal "unable to select platform"
+}
+
+
+__platform_setup() {
+
+  local readonly platform="$LAUNCHKIT_PLATFORM"
+
+  _platform_${platform}_setup
+}
+
+
+__build_and_run() {
+
+  local readonly platform="$LAUNCHKIT_PLATFORM"
+
+  _scenario_gpu_trial1_${platform}_build
+  _scenario_gpu_trial1_${platform}_run
+}
+
+
+LAUNCHKIT_RUNTIME_PATH_EXE=""
+LAUNCHKIT_PLATFORM=""
+
+
+__platform_match
+__platform_setup
+
+__build_and_run
+
+
+
