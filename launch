@@ -87,7 +87,7 @@ _scenario_gpu_trial1_perlmutter_build() {
 
   cmake \
       -DCMAKE_BUILD_TYPE="Debug" \
-      -DCMAKE_Fortran_FLAGS="-fast -mp=gpu -gpu=cc80 -Mfree" \
+      -DCMAKE_Fortran_FLAGS="-fast -acc=gpu -gpu=cc80 -Mfree" \
       -DCMAKE_Fortran_FLAGS_DEBUG="-Minfo=all" \
     ..
 
