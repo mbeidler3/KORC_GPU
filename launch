@@ -85,6 +85,9 @@ _scenario_gpu_trial1_mattlaptop_run() {
 
 _scenario_gpu_trial1_perlmutter_build() {
 
+  rm -f CMakeCache.txt
+  rm -rf CMakeFiles
+
   rm -rf ./build
   mkdir ./build && cd $_
 
