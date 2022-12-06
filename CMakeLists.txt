@@ -21,4 +21,15 @@ find_package (OpenMP)
 set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_Fortran_FLAGS}")
 set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_Fortran_FLAGS}")
 
+#  Configure MPI
+find_package (MPI REQUIRED)
+set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${MPI_Fortran_COMPILE_FLAGS}")
+set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_Fortran_LINK_FLAGS}")
+include_directories (${MPI_Fortran_INCLUDE_PATH})
+
+#  Configure HDF5
+set( HDF5_USE_STATIC_LIBRARIES ON )
+find_package( HDF5 COMPONENTS Fortran REQUIRED )
+include_directories( SYSTEM ${HDF5_INCLUDE_DIRS} )
+
 add_subdirectory (src)

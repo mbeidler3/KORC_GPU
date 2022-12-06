@@ -60,13 +60,17 @@ _scenario_gpu_trial1_mattlaptop_build() {
 
   rm -f CMakeCache.txt
   rm -rf CMakeFiles
+  rm -f src/CMakeCache.txt
+  rm -rf src/CMakeFiles
 
-  rm -rf ./build
-  mkdir ./build && cd $_
+  #rm -rf ./build
+  #mkdir ./build && cd $_
+
+  cd ./build
 
   cmake \
-      -DCMAKE_BUILD_TYPE="Debug" \
-      -DCMAKE_Fortran_FLAGS="-O3 -fopenmp" \
+      -DCMAKE_BUILD_TYPE="Regular" \
+      -DCMAKE_Fortran_FLAGS="-O3 -fopenacc -fallow-argument-mismatch -DHDF5_DOUBLE_PRESICION -fPIC" \
       -DCMAKE_Fortran_FLAGS_DEBUG="-g -ffpe-trap=invalid,zero,overflow -fimplicit-none -fbacktrace -fsanitize=address" \
     ..
 
@@ -178,6 +182,3 @@ __platform_match
 __platform_setup
 
 __build_and_run
-
-
-

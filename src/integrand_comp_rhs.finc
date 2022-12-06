@@ -1,0 +1,30 @@
+!-----------------------------------------------------------------------
+!     interface block for the integrand routine.                        
+!-----------------------------------------------------------------------
+      INTERFACE 
+        SUBROUTINE integrand(int,bigr,rb,tb,mps) 
+        USE local 
+        USE rblock_type_mod 
+        USE tblock_type_mod 
+        COMPLEX(r8), DIMENSION(:,:,:,:), INTENT(OUT) :: int 
+        REAL(r8), DIMENSION(:,:), INTENT(IN) :: bigr 
+        TYPE(rblock_type), INTENT(INOUT), TARGET :: rb 
+        TYPE(tblock_type), INTENT(INOUT) :: tb 
+        INTEGER(i4), INTENT(IN) :: mps
+        END SUBROUTINE integrand 
+      END INTERFACE 
+!-----------------------------------------------------------------------
+!     interface block for the boundary condition routine.               
+!-----------------------------------------------------------------------
+      INTERFACE 
+        SUBROUTINE comp_bcrhs(rhs,seam,flag,nqty,symm,svess) 
+        USE local 
+        USE edge_type_mod 
+        USE vector_type_mod 
+        INTEGER(i4), INTENT(IN) :: nqty 
+        TYPE(cvector_type), INTENT(INOUT) :: rhs 
+        TYPE(edge_type), INTENT(IN) :: seam 
+        CHARACTER(*), INTENT(IN) :: flag 
+        CHARACTER(*), INTENT(IN), OPTIONAL :: symm,svess
+        END SUBROUTINE comp_bcrhs 
+      END INTERFACE 
