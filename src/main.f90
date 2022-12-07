@@ -190,6 +190,7 @@ program main
       X_Z_loop = X_Z_loop+dt/2*V_Z_loop
 
       !! Main iteration loop
+      !$acc serial
       do it=1,t_steps
 
          U_X = gam_loop*V_X_loop
@@ -253,6 +254,7 @@ program main
          X_Z_loop = X_Z_loop + dt*V_Z_loop
 
       end do
+      !$acc end serial
 
       X_X(pp)=X_X_loop
       X_Y(pp)=X_Y_loop
