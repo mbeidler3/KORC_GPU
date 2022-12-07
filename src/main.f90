@@ -18,13 +18,15 @@ program main
    REAL(rp)  :: Eo,gam0,v0,eta0,chi0
    REAL(rp)  :: v_norm,B_norm,t_norm,x_norm
    CHARACTER(100) :: path_to_inputs,path_to_outputs
+   REAL(rp)     :: X_X_loop,X_Y_loop,X_Z_loop
+   REAL(rp)     :: V_X_loop,V_Y_loop,V_Z_loop
    REAL(rp)     :: U_X,U_Y,U_Z
    REAL(rp)    :: U_hs_X,U_hs_Y,U_hs_Z
    REAL(rp)    :: tau_X,tau_Y,tau_Z
    REAL(rp)     :: t_X,t_Y,t_Z
    REAL(rp)    :: up_X,up_Y,up_Z
    REAL(rp)     :: cross_X,cross_Y,cross_Z
-   REAL(rp)     :: sigma,us,gp,g0,s
+   REAL(rp)     :: sigma,us,gp,gam_loop,s
    INTEGER,PARAMETER 	:: default_unit_open = 101
    INTEGER,PARAMETER 	:: output_write = 202,data_write = 102
    INTEGER  :: argn,read_stat
@@ -171,19 +173,27 @@ program main
    !$acc parallel loop
    do pp=1,nRE
 
+      X_X_loop=X_X(pp)
+      X_Y_loop=X_Y(pp)
+      X_Z_loop=X_Z(pp)
+
+      V_X_loop=V_X(pp)
+      V_Y_loop=V_Y(pp)
+      V_Z_loop=V_Z(pp)
+
+      gam_loop=gam(pp)
+
       !! Initial half step
-      X_X(pp) = X_X(pp)+dt/2*V_X(pp)
-      X_Y(pp) = X_Y(pp)+dt/2*V_Y(pp)
-      X_Z(pp) = X_Z(pp)+dt/2*V_Z(pp)
+      X_X_loop = X_X_loop+dt/2*V_X_loop
+      X_Y_loop = X_Y_loop+dt/2*V_Y_loop
+      X_Z_loop = X_Z_loop+dt/2*V_Z_loop
 
       !! Main iteration loop
       do it=1,t_steps
 
-         g0=gam(pp)
-
-         U_X = g0*V_X(pp)
-         U_Y = g0*V_Y(pp)
-         U_Z = g0*V_Z(pp)
+         U_X = gam_loop*V_X_loop
+         U_Y = gam_loop*V_Y_loop
+         U_Z = gam_loop*V_Z_loop
 
          ! LEAP-FROG SCHEME FOR LORENTZ FORCE !
 
@@ -214,12 +224,12 @@ program main
          us = up_X*tau_X+up_Y*tau_Y+up_Z*tau_Z
          ! variable 'u^*' in Vay, J.-L. PoP (2008)
 
-         gam(pp) = SQRT( 0.5*(sigma + SQRT(sigma*sigma + &
+         gam_loop = SQRT( 0.5*(sigma + SQRT(sigma*sigma + &
          4.0*(tau_X*tau_X+tau_Y*tau_Y+tau_Z*tau_Z + us*us))) )
 
-         t_X = tau_X/gam(pp)
-         t_Y = tau_Y/gam(pp)
-         t_Z = tau_Z/gam(pp)
+         t_X = tau_X/gam_loop
+         t_Y = tau_Y/gam_loop
+         t_Z = tau_Z/gam_loop
 
          s = 1.0/(1.0 + t_X*t_X+t_Y*t_Y+t_Z*t_Z)
          ! variable 's' in Vay, J.-L. PoP (2008)
@@ -233,15 +243,26 @@ program main
          U_Z = s*(up_Z + (up_X*t_X+up_Y*t_Y+up_Z*t_Z)*t_Z + cross_Z)
          ! LEAP-FROG SCHEME FOR LORENTZ FORCE !
 
-         V_X(pp) = U_X/gam(pp)
-         V_Y(pp) = U_Y/gam(pp)
-         V_Z(pp) = U_Z/gam(pp)
+         V_X_loop = U_X/gam_loop
+         V_Y_loop = U_Y/gam_loop
+         V_Z_loop = U_Z/gam_loop
 
-         X_X(pp) = X_X(pp) + dt*V_X(pp)
-         X_Y(pp) = X_Y(pp) + dt*V_Y(pp)
-         X_Z(pp) = X_Z(pp) + dt*V_Z(pp)
+         X_X_loop = X_X_loop + dt*V_X_loop
+         X_Y_loop = X_Y_loop + dt*V_Y_loop
+         X_Z_loop = X_Z_loop + dt*V_Z_loop
 
       end do
+
+      X_X(pp)=X_X_loop
+      X_Y(pp)=X_Y_loop
+      X_Z(pp)=X_Z_loop
+
+      V_X(pp)=V_X_loop
+      V_Y(pp)=V_Y_loop
+      V_Z(pp)=V_Z_loop
+
+      gam_loop=gam(pp)
+
    end do
    !$acc end parallel loop
 

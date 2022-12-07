@@ -90,8 +90,8 @@ _scenario_gpu_trial1_perlmutter_build() {
 
   cmake \
       -DCMAKE_BUILD_TYPE="Debug" \
-      -DCMAKE_Fortran_FLAGS="-fast -acc=gpu -gpu=cc80 -Mfree" \
-      -DCMAKE_Fortran_FLAGS_DEBUG="-Minfo=all" \
+      -DCMAKE_Fortran_FLAGS="-fast -acc=gpu -gpu=cc80 -Mfree -fPIC -O3" \
+      -DCMAKE_Fortran_FLAGS_DEBUG="-Minfo=all -Minstrument -traceback -lnvhpcwrapnvtx" \
     ..
 
   [[ $? -eq 0 ]] && make
@@ -163,7 +163,7 @@ __build_and_run() {
   local readonly platform="$LAUNCHKIT_PLATFORM"
 
   _scenario_gpu_trial1_${platform}_build
-  _scenario_gpu_trial1_${platform}_run
+  #_scenario_gpu_trial1_${platform}_run
 }
 
 
