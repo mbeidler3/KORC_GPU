@@ -162,7 +162,7 @@ __build_and_run() {
 
   local readonly platform="$LAUNCHKIT_PLATFORM"
 
-  _scenario_gpu_trial1_${platform}_build
+  _scenario_gpu_trial1_${platform}_build &> compiler_report.txt
   #_scenario_gpu_trial1_${platform}_run
 }
 
