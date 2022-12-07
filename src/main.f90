@@ -170,7 +170,8 @@ program main
 
    write(output_write,*) '* * * * * * * * * Begin Orbits * * * * * * * * *'
 
-   !$acc parallel loop
+   !$acc  parallel loop private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop, &
+   !$acc& V_Y_loop,V_Z_loop,gam_loop)
    do pp=1,nRE
 
       X_X_loop=X_X(pp)
