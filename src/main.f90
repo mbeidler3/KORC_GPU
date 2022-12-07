@@ -261,7 +261,7 @@ program main
       V_Y(pp)=V_Y_loop
       V_Z(pp)=V_Z_loop
 
-      gam_loop=gam(pp)
+      gam(pp)=gam_loop
 
    end do
    !$acc end parallel loop
