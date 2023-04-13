@@ -27,6 +27,14 @@ _error_fatal() {
   exit 1
 }
 
+_platform_korcgpu_match() {
+
+  [[ $(HOSTNAME) =~ korcgpu ]] || return 1
+}
+
+_platform_korcgpu_setup() {
+
+}
 
 _platform_mattlaptop_match() {
 
@@ -55,6 +63,22 @@ _platform_perlmutter_setup() {
   module load nvidia
 }
 
+_scenario_gpu_trial1_korcgpu_build() {
+
+  rm -rf ./build
+  mkdir ./build && cd $_
+
+  cmake \
+      -DCMAKE_BUILD_TYPE="Debug" \
+      -DCMAKE_Fortran_FLAGS="-fast -acc=gpu -gpu=cc80 -Mfree -fPIC -O3" \
+      -DCMAKE_Fortran_FLAGS_DEBUG="-Minfo=all -Minstrument -traceback -lnvhpcwrapnvtx" \
+    ..
+
+  [[ $? -eq 0 ]] && make
+
+  LAUNCHKIT_RUNTIME_PATH_EXE="$(pwd -P)/build/bin/xkorc"
+  cd - >/dev/null
+}
 
 _scenario_gpu_trial1_mattlaptop_build() {
 
@@ -145,6 +169,7 @@ __platform_match() {
 
   _platform_perlmutter_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="perlmutter"
   _platform_mattlaptop_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="mattlaptop"
+  _platform_korcgpu_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="korcgpu"
 
   [[ ${match_count} -eq 1 ]] || _error_fatal "unable to select platform"
 }
