@@ -254,7 +254,6 @@ program main
          X_Z_loop = X_Z_loop + dt*V_Z_loop
 
       end do
-      !$acc end loop seq
 
       X_X(pp)=X_X_loop
       X_Y(pp)=X_Y_loop
