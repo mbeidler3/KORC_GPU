@@ -33,7 +33,9 @@ _platform_korcgpu_match() {
 }
 
 _platform_korcgpu_setup() {
-
+  export CC=nvcc
+  export CXX=nvc++
+  export FC=nvfortran
 }
 
 _platform_mattlaptop_match() {
