@@ -45,10 +45,7 @@ _platform_mattlaptop_match() {
 
 
 _platform_mattlaptop_setup() {
-
-  export CC=/opt/local/bin/gcc-mp-11
-  export CXX=/opt/local/bin/g++-mp-11
-  export FC=/opt/local/bin/gfortran-mp-11
+  export FC=/usr/local/bin/gfortran-13
 }
 
 
@@ -92,8 +89,12 @@ _scenario_gpu_trial1_mattlaptop_build() {
 
   cmake \
       -DCMAKE_BUILD_TYPE="Debug" \
-      -DCMAKE_Fortran_FLAGS="-O3 -fopenmp" \
-      -DCMAKE_Fortran_FLAGS_DEBUG="-g -ffpe-trap=invalid,zero,overflow -fimplicit-none -fbacktrace -fsanitize=address" \
+      -DCMAKE_Fortran_FLAGS="-O3 -msse2 -fopenmp -fallow-argument-mismatch -malign-double" \
+      -DCMAKE_Fortran_FLAGS_DEBUG="-g -ffpe-trap=invalid,zero,overflow -fbacktrace" \
+      -DUSE_PSPLINE=ON \
+      -DPSPLINE_INCLUDE_PATH=/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/include \
+      -DPSPLINE_LINK_FLAGS="-L/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/lib -lpspline" \
+	    -DPSPLINE_LIBRARIES=/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/lib/libpspline.a   \
     ..
 
   [[ $? -eq 0 ]] && make
