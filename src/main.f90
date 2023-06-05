@@ -9,8 +9,9 @@ REAL(rp),ALLOCATABLE,DIMENSION(:) :: X_X,X_Y,X_Z
 REAL(rp),ALLOCATABLE,DIMENSION(:) :: V_X,V_Y,V_Z
 REAL(rp),ALLOCATABLE,DIMENSION(:) :: B_X,B_Y,B_Z
 REAL(rp),ALLOCATABLE,DIMENSION(:) :: E_X,E_Y,E_Z
-REAL(rp),DIMENSION(20) :: XF,YF
-REAL(rp),DIMENSION(20,20) :: BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z
+REAL(rp),DIMENSION(20) :: XF=0._rp,YF=0._rp
+REAL(rp),DIMENSION(20,20) :: BF_X=0._rp,BF_Y=0._rp,BF_Z=0._rp
+REAL(rp),DIMENSION(20,20) :: EF_X=0._rp,EF_Y=0._rp,EF_Z=0._rp
 
 NAMELIST /input_parameters/ nRE,simulation_time,field_type
 
@@ -66,7 +67,7 @@ ALLOCATE(gam(nRE))
 !! Initialize fields
 if (field_type.eq.'UNIFORM') then
    
-   write(output_write,'("* * * * USING UNIFORM MAGNETIC FIELD * * * *",/)')
+   write(output_write,'("* * * * USING UNIFORM MAGNETIC FIELD * * * *")')
 
    B_X=0._rp
    B_Y=0._rp
@@ -121,7 +122,11 @@ V_Z=v0*cos(eta0)
 gam=gam0
 
 v_norm=C_C
-B_norm=B_Z(1)
+if (field_type.eq.'UNIFORM') then
+   B_norm=B_Z(1)
+else if (field_type.eq.'PSPLINE') then
+   B_norm=BF_Z(1,1)
+end if
 t_norm=C_ME/(C_E*B_norm)
 x_norm=V_norm*t_norm
 

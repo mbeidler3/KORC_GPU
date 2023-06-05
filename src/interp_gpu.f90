@@ -2,14 +2,14 @@ module interp_gpu
 
 use params_gpu
 
-#ifdef PSPLINE
+!#ifdef PSPLINE
 use EZspline_obj	! psplines module
 use EZspline		! psplines module
-#endif
+!#endif
 
 IMPLICIT NONE
   
-#ifdef PSPLINE
+!#ifdef PSPLINE
 TYPE, PRIVATE :: KORC_2D_FIELDS_INTERPOLANT
     !! @note Derived type containing 2-D PSPLINE interpolants for
     !! cylindrical components of vector fields \(\mathbf{F}(R,Z) =
@@ -41,10 +41,12 @@ TYPE(KORC_2D_FIELDS_INTERPOLANT), PRIVATE      :: efield_2d
 INTEGER                                        :: ezerr
 !! Error status during PSPLINE interpolations.
 
-PUBLIC :: interp_fields,initialize_interpolants,finalize_interpolants
-    
+!PUBLIC :: interp_fields,initialize_interpolants,finalize_interpolants
+!#endif
+
 CONTAINS
 
+!#ifdef PSPLINE
 subroutine initialize_interpolants(XF,YF,BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z)
     REAL(rp),DIMENSION(20), INTENT(IN) :: XF,YF
     REAL(rp),DIMENSION(20,20), INTENT(IN) :: BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z
@@ -119,7 +121,7 @@ subroutine initialize_interpolants(XF,YF,BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z)
   
     write(output_write,'("* * * * * * INTERPOLANT INITIALIZED * * * * * *",/)')
 
-end subroutine initialize_interpolants 
+end subroutine initialize_interpolants
   
 subroutine interp_fields(XX,YY,BX,BY,BZ,EX,EY,EZ)
     REAL(rp),INTENT(IN)   :: XX,YY
@@ -143,6 +145,6 @@ subroutine finalize_interpolants
     call Ezspline_free(efield_2d%Z, ezerr)
   
 end subroutine finalize_interpolants
-#endif
+!#endif
   
 end module interp_gpu

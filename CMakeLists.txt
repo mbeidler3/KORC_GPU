@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.8.8)
 
-project (korc_proj Fortran)
+project (korcgpu_proj Fortran)
 
 #  Set directories to build all binary files.
 set (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/build/bin)
@@ -23,7 +23,7 @@ set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_Fortran_FLAGS}")
 #  Configure PSPLINE
 option (USE_PSPLINE "Use PSPLINE interpolation" OFF)
 if (${USE_PSPLINE})
-   include_directories (${PSPLINE_INCLUDE_PATH} ${CMAKE_Fortran_MODULE_DIRECTORY})
+   include_directories (${PSPLINE_INCLUDE_PATH})
    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${PSPLINE_LINK_FLAGS}")
    add_definitions (-DPSPLINE)
 endif ()
