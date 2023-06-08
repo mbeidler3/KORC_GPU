@@ -13,3 +13,6 @@ set_property(TARGET xkorcgpu PROPERTY LINKER_LANGUAGE Fortran)
 if (${USE_PSPLINE})
    target_link_libraries (xkorcgpu ${PSPLINE_LIBRARIES})
 endif()
+
+#target_link_libraries (xkorcgpu ${MPI_Fortran_LIBRARIES})
+#target_link_libraries (xkorcgpu ${HDF5_LIBRARIES})

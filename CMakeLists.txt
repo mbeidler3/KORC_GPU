@@ -16,9 +16,19 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 #  Configure OpenMP
-find_package (OpenMP)
-set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_Fortran_FLAGS}")
-set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_Fortran_FLAGS}")
+#find_package (OpenMP)
+#set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_Fortran_FLAGS}")
+#set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_Fortran_FLAGS}")
+
+#  Configure HDF5
+#find_package (HDF5 REQUIRED COMPONENTS Fortran)
+#include_directories (${HDF5_INCLUDE_DIRS})
+
+#  Configure MPI
+#find_package (MPI REQUIRED)
+#set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${MPI_Fortran_COMPILE_FLAGS}")
+#set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_Fortran_LINK_FLAGS}")
+#include_directories (${MPI_Fortran_INCLUDE_PATH})
 
 #  Configure PSPLINE
 option (USE_PSPLINE "Use PSPLINE interpolation" OFF)

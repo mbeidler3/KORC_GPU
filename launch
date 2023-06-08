@@ -45,13 +45,15 @@ _platform_mattlaptop_match() {
 
 
 _platform_mattlaptop_setup() {
+  export CC=/usr/local/bin/gcc-13
+  export CXX=/usr/local/bin/g++-13
   export FC=/usr/local/bin/gfortran-13
 }
 
 
 _platform_perlmutter_match() {
 
-  [[ $LMOD_SYSHOST =~ perlmutter ]] || return 1
+  [[ $LMOD_SYSTEM_NAME =~ perlmutter ]] || return 1
 }
 
 
@@ -81,6 +83,27 @@ _scenario_gpu_trial1_korcgpu_build() {
 
 _scenario_gpu_trial1_mattlaptop_build() {
 
+  BUILD_TYPE=Release
+
+  if [ $# -eq 1 ]
+  then
+      BUILD_TYPE=Debug
+  fi
+
+  echo cmake configured to generate a $BUILD_TYPE build.
+  if [ "$BUILD_TYPE" == Debug ]
+  then
+      echo "    cmake may be reconfigured to generate a Release build by running this     "
+      echo "    script with no arguments or using the commmand                            "
+      echo
+      echo "    cmake -DCMAKE_BUILD_TYPE=Release                                          "
+  else
+      echo "    cmake may be reconfigured to generate a Debug build by running this script"
+      echo "    with a Debug argument or using the commmand                               "
+      echo
+      echo "    cmake -DCMAKE_BUILD_TYPE=Debug                                            "
+  fi
+
   rm -f CMakeCache.txt
   rm -rf CMakeFiles
 
@@ -88,16 +111,20 @@ _scenario_gpu_trial1_mattlaptop_build() {
   mkdir ./build && cd $_
 
   cmake \
-      -DCMAKE_BUILD_TYPE="Debug" \
+      -DCMAKE_BUILD_TYPE:String=$BUILD_TYPE \
       -DCMAKE_Fortran_FLAGS="-O3 -fopenmp -fallow-argument-mismatch -malign-double" \
+      -DCMAKE_C_FLAGS="-O3 -fopenmp -malign-double"  \
+      -DCMAKE_CXX_FLAGS="-O3 -fopenmp -malign-double" \
       -DCMAKE_Fortran_FLAGS_DEBUG="-g -ffpe-trap=invalid,zero,overflow -fbacktrace" \
+      -DCMAKE_C_FLAGS_DEBUG="-g -g3" \
+      -DCMAKE_CXX_FLAGS_DEBUG="-g -g3" \
       -DUSE_PSPLINE=ON \
       -DPSPLINE_INCLUDE_PATH=/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/include \
       -DPSPLINE_LINK_FLAGS="-L/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/lib -lpspline" \
 	    -DPSPLINE_LIBRARIES=/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/lib/libpspline.a   \
     ..
 
-  [[ $? -eq 0 ]] && make
+  [[ $? -eq 0 ]] && make VERBOSE=1
 
   LAUNCHKIT_RUNTIME_PATH_EXE="$(pwd -P)/build/bin/xkorcgpu"
   cd - >/dev/null
@@ -119,6 +146,10 @@ _scenario_gpu_trial1_perlmutter_build() {
       -DCMAKE_BUILD_TYPE="Debug" \
       -DCMAKE_Fortran_FLAGS="-fast -acc=gpu -gpu=cc80 -Mfree -fPIC -O3" \
       -DCMAKE_Fortran_FLAGS_DEBUG="-Minfo=all -Minstrument -traceback -lnvhpcwrapnvtx" \
+      -DUSE_PSPLINE=ON \
+      -DPSPLINE_INCLUDE_PATH=/global/cfs/cdirs/m3236/build_unstable/PSPLINE_GH/pspline/build/include \
+      -DPSPLINE_LINK_FLAGS="-L/global/cfs/cdirs/m3236/build_unstable/PSPLINE_GH/pspline/build/lib -lpspline" \
+      -DPSPLINE_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/PSPLINE_GH/pspline/build/lib/libpspline.a   \
     ..
 
   [[ $? -eq 0 ]] && make

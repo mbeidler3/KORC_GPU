@@ -149,24 +149,25 @@ E_Z=E_Z/(b_norm*v_norm)
 write(output_write,*) '* * * * * * * * * Fields * * * * * * * * *'
 
 #ifdef PSPLINE
+if (field_type.eq.'PSPLINE') then
+   XF=XF/x_norm
+   YF=YF/x_norm
 
-XF=XF/x_norm
-YF=YF/x_norm
+   BF_X=BF_X/b_norm
+   BF_Y=BF_Y/b_norm
+   BF_Z=BF_Z/b_norm
 
-BF_X=BF_X/b_norm
-BF_Y=BF_Y/b_norm
-BF_Z=BF_Z/b_norm
+   EF_X=EF_X/(b_norm*v_norm)
+   EF_Y=EF_Y/(b_norm*v_norm)
+   EF_Z=EF_Z/(b_norm*v_norm)
 
-EF_X=EF_X/(b_norm*v_norm)
-EF_Y=EF_Y/(b_norm*v_norm)
-EF_Z=EF_Z/(b_norm*v_norm)
+   call initialize_interpolants(XF,YF,BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z)
 
-call initialize_interpolants(XF,YF,BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z)
-
-do pp=1,nRE
-   call interp_fields(X_X(pp),X_Y(pp),B_X(pp),B_Y(pp),B_Z(pp), &
-      E_X(pp),E_Y(pp),E_Z(pp))
-enddo
+   do pp=1,nRE
+      call interp_fields(X_X(pp),X_Y(pp),B_X(pp),B_Y(pp),B_Z(pp), &
+         E_X(pp),E_Y(pp),E_Z(pp))
+   enddo
+endif
 #endif
 
 write(output_write,*) 'B',B_X(1)*b_norm,B_Y(1)*b_norm,B_Z(1)*b_norm
@@ -326,11 +327,11 @@ write(output_write,*) 'Pusher time:',(c1-c2)/rate
 
 ! * * * FINALIZING SIMULATION * * *
 
-if (field_type.eq.'PSPLINE') then
 #ifdef PSPLINE
+if (field_type.eq.'PSPLINE') then
    call finalize_interpolants
-#endif
 endif
+#endif
 
 write(output_write,'("KORC ran suppessfully!")')
 close(output_write)
