@@ -60,7 +60,6 @@ _platform_perlmutter_match() {
 _platform_perlmutter_setup() {
 
   module load cmake
-  module unload darshan/3.1.4
   module load nvidia
 }
 
