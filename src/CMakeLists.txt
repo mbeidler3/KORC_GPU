@@ -4,6 +4,7 @@ set (korcgpu_sources "")
 list (APPEND korcgpu_sources
     interp_gpu.f90
     params_gpu.f90
+    pusher_gpu.f90
     main.f90
 )
 

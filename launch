@@ -107,6 +107,8 @@ _scenario_gpu_trial1_mattlaptop_build() {
   rm -f CMakeCache.txt
   rm -rf CMakeFiles
 
+  rm ./src/*.mod
+
   rm -rf ./build
   mkdir ./build && cd $_
 

@@ -125,12 +125,20 @@ end subroutine initialize_interpolants
   
 subroutine interp_fields(XX,YY,BX,BY,BZ,EX,EY,EZ)
     REAL(rp),INTENT(IN)   :: XX,YY
-    REAL(rp),DIMENSION(1),INTENT(OUT)   :: BX,BY,BZ
-    REAL(rp),DIMENSION(1),INTENT(OUT)   :: EX,EY,EZ
+    REAL(rp),INTENT(OUT)   :: BX,BY,BZ,EX,EY,EZ
+    REAL(rp),DIMENSION(1)   :: BX_i,BY_i,BZ_i,EX_i,EY_i,EZ_i
+
   
     call EZspline_interp(bfield_2d%X,bfield_2d%Y,bfield_2d%Z, &
-        efield_2d%X,efield_2d%Y,efield_2d%Z,1,(/XX/),(/YY/),BX,BY,BZ,EX,EY,EZ,ezerr)
+        efield_2d%X,efield_2d%Y,efield_2d%Z,1,(/XX/),(/YY/),BX_i,BY_i,BZ_i,EX_i,EY_i,EZ_i,ezerr)
     call EZspline_error(ezerr)
+
+    BX=BX_i(1)
+    BY=BY_i(1)
+    BZ=BZ_i(1)
+    EX=BX_i(1)
+    EY=BY_i(1)
+    EZ=BZ_i(1)
   
 end subroutine
   
