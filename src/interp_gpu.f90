@@ -118,8 +118,6 @@ subroutine initialize_interpolants(XF,YF,BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z)
 
     call EZspline_setup(efield_2d%Z,EF_Z,ezerr,.TRUE.)
     call EZspline_error(ezerr)
-  
-    write(output_write,'("* * * * * * INTERPOLANT INITIALIZED * * * * * *",/)')
 
 end subroutine initialize_interpolants
   

@@ -67,6 +67,7 @@ ALLOCATE(rnd1(nRE))
 ALLOCATE(gam(nRE))
 
 !! Initialize fields
+write(output_write,'("* * * * * * * * * Fields * * * * * * * * *")')
 if (field_type.eq.'UNIFORM') then
    
    write(output_write,'("* * * * USING UNIFORM MAGNETIC FIELD * * * *")')
@@ -148,8 +149,6 @@ E_X=E_X/(b_norm*v_norm)
 E_Y=E_Y/(b_norm*v_norm)
 E_Z=E_Z/(b_norm*v_norm)
 
-write(output_write,*) '* * * * * * * * * Fields * * * * * * * * *'
-
 #ifdef PSPLINE
 if (field_type.eq.'PSPLINE') then
    XF=XF/x_norm
@@ -172,17 +171,19 @@ if (field_type.eq.'PSPLINE') then
 endif
 #endif
 
-write(output_write,*) 'B',B_X(1)*b_norm,B_Y(1)*b_norm,B_Z(1)*b_norm
-write(output_write,*) 'E',E_X(1)*(b_norm*v_norm),E_Y(1)*(b_norm*v_norm),E_Z(1)*(b_norm*v_norm)
+write(output_write,'("B: ",E17.10,E17.10,E17.10)') &
+   B_X(1)*b_norm,B_Y(1)*b_norm,B_Z(1)*b_norm
+write(output_write,'("E: ",E17.10,E17.10,E17.10)') &
+   E_X(1)*(b_norm*v_norm),E_Y(1)*(b_norm*v_norm),E_Z(1)*(b_norm*v_norm)
 
 write(output_write,*) '* * * * * * * * * Initial Conditions * * * * * * * * *'
 
-write(output_write,*) 'Number of electrons: ',nRE
-write(output_write,*) 'gam0,eta0,chi0: ',gam0,eta0,chi0
-write(output_write,*) 'X0: ',X_X(1)*x_norm,X_Y(1)*x_norm,X_Z(1)*x_norm
-write(output_write,*) 'V0: ',V_X(1)*v_norm,V_Y(1)*v_norm,V_Z(1)*v_norm
-write(data_write,*) 'X0: ',X_X(1)*x_norm,X_Y(1)*x_norm,X_Z(1)*x_norm
-write(data_write,*) 'V0: ',V_X(1)*v_norm,V_Y(1)*v_norm,V_Z(1)*v_norm
+write(output_write,'("Number of electrons: ",I16)') nRE
+write(output_write,'("gam0,eta0,chi0: ",E17.10,E17.10,E17.10)') gam0,eta0,chi0
+write(output_write,'("X0: ",E17.10,E17.10,E17.10)') X_X(1)*x_norm,X_Y(1)*x_norm,X_Z(1)*x_norm
+write(output_write,'("V0: ",E17.10,E17.10,E17.10)') V_X(1)*v_norm,V_Y(1)*v_norm,V_Z(1)*v_norm
+write(data_write,'("X0: ",E17.10,E17.10,E17.10)') X_X(1)*x_norm,X_Y(1)*x_norm,X_Z(1)*x_norm
+write(data_write,'("V0: ",E17.10,E17.10,E17.10)') V_X(1)*v_norm,V_Y(1)*v_norm,V_Z(1)*v_norm
 
 !! Set timestep to resolve relativistic gyrofrequency, simulation time and
 !! number of time steps
@@ -194,9 +195,9 @@ dt=simulation_time/real(t_steps)
 
 write(output_write,*) '* * * * * * * * * Timings * * * * * * * * *'
 
-write(output_write,*) 'simulation time:',simulation_time*t_norm
-write(output_write,*) 'dt:',dt*t_norm
-write(output_write,*) 't_steps:',t_steps
+write(output_write,'("simulation time: ",E17.10)') simulation_time*t_norm
+write(output_write,'("dt: ",E17.10)') dt*t_norm
+write(output_write,'("t_steps: ",I16)') t_steps
 
 !! Particle push
 
@@ -204,20 +205,20 @@ write(output_write,*) 't_steps:',t_steps
 
 call system_clock(c2)
 
-write(output_write,*) 'Setup time:',(c2-c1)/rate
+write(output_write,'("Setup time: ",E17.10)') (c2-c1)/rate
 
-write(output_write,*) '* * * * * * * * * Begin Orbits * * * * * * * * *'
+write(output_write,'("* * * * * * * * * Begin Orbits * * * * * * * * *")')
 
 call FO_push(nRE,dt,X_X,X_Y,X_Z,V_Z,V_Y,V_Z,B_X,B_Y,B_Z,E_X,E_Y,E_Z)
 
-write(output_write,*) '* * * * * * * * * Final Conditions * * * * * * * * *'
-write(output_write,*) 'V: ',V_X(1)*v_norm,V_Y(1)*v_norm,V_Z(1)*v_norm
-write(output_write,*) 'X: ',X_X(1)*x_norm,X_Y(1)*x_norm,X_Z(1)*x_norm
+write(output_write,'("* * * * * * * * * Final Conditions * * * * * * * * *")')
+write(output_write,'("V: ",E17.10,E17.10,E17.10)') V_X(1)*v_norm,V_Y(1)*v_norm,V_Z(1)*v_norm
+write(output_write,'("X: ",E17.10,E17.10,E17.10)') X_X(1)*x_norm,X_Y(1)*x_norm,X_Z(1)*x_norm
 
 
 call system_clock(c1)
 
-write(output_write,*) 'Pusher time:',(c1-c2)/rate
+write(output_write,'("Pusher time: ",E17.10)') (c1-c2)/rate
 
 ! * * * FINALIZING SIMULATION * * *
 
