@@ -4,6 +4,7 @@ use interp_gpu
 use params_gpu
 use pusher_gpu
 
+
 implicit none
 
 REAL(rp),ALLOCATABLE,DIMENSION(:) :: X_X,X_Y,X_Z
@@ -189,7 +190,7 @@ dt = 0.01_rp*(2.0_rp*C_PI/(C_E*B_Z(1)/( gam0*C_ME )))/t_norm
 
 simulation_time=simulation_time/t_norm
 t_steps=ceiling(simulation_time/dt)
-dt=simulation_time/float(t_steps)
+dt=simulation_time/real(t_steps)
 
 write(output_write,*) '* * * * * * * * * Timings * * * * * * * * *'
 
