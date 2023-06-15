@@ -192,9 +192,9 @@ _scenario_gpu_trial1_perlmutter_build() {
         -DCMAKE_Fortran_FLAGS="-fast -acc=gpu -gpu=cc80 -Mfree -fPIC -O3 -Mpreprocess" \
         -DCMAKE_Fortran_FLAGS_DEBUG="-g -Minfo=all -Minstrument -traceback -lnvhpcwrapnvtx" \
         -DUSE_PSPLINE=ON \
-        -DPSPLINE_INCLUDE_PATH=/global/cfs/cdirs/m3236/build_unstable/PSPLINE_GH/pspline/build/include \
-        -DPSPLINE_LINK_FLAGS="-L/global/cfs/cdirs/m3236/build_unstable/PSPLINE_GH/pspline/build/lib -lpspline" \
-        -DPSPLINE_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/PSPLINE_GH/pspline/build/lib/libpspline.a   \
+        -DPSPLINE_INCLUDE_PATH=/global/cfs/cdirs/m3236/build_gpu_test/PSPLINE_GH/pspline/build/include \
+        -DPSPLINE_LINK_FLAGS="-L/global/cfs/cdirs/m3236/build_gpu_test/PSPLINE_GH/pspline/build/lib -lpspline" \
+        -DPSPLINE_LIBRARIES=/global/cfs/cdirs/m3236/build_gpu_test/PSPLINE_GH/pspline/build/lib/libpspline.a   \
       ..
   else
     echo " choose a valid hardware type "

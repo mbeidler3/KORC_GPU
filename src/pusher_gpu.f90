@@ -18,7 +18,9 @@ subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V
   REAL(rp),INTENT(IN) :: dt,x_norm,v_norm
   CHARACTER(100),INTENT(IN) :: field_type
 
+#ifdef ACC 
   !$acc routine (intper_fields) seq
+#endif
 
 #ifdef ACC  
   !$acc  parallel loop &
