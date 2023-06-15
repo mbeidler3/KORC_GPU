@@ -127,10 +127,10 @@ subroutine interp_fields(XX,YY,BX,BY,BZ,EX,EY,EZ)
     REAL(rp),INTENT(OUT)   :: BX,BY,BZ,EX,EY,EZ
     REAL(rp),DIMENSION(1)   :: BX_i,BY_i,BZ_i,EX_i,EY_i,EZ_i
 
-    !$acc routine (EZspline_interp) seq
+    !$acc routine (EZspline_interp2_FOvars_cloud) seq
     !$acc routine (EZspline_error) seq
   
-    call EZspline_interp(bfield_2d%X,bfield_2d%Y,bfield_2d%Z, &
+    call EZspline_interp2_FOvars_cloud(bfield_2d%X,bfield_2d%Y,bfield_2d%Z, &
         efield_2d%X,efield_2d%Y,efield_2d%Z,1,(/XX/),(/YY/),BX_i,BY_i,BZ_i,EX_i,EY_i,EZ_i,ezerr)
     call EZspline_error(ezerr)
 

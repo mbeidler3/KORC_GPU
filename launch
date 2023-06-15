@@ -142,7 +142,7 @@ _scenario_gpu_trial1_mattlaptop_run() {
 _scenario_gpu_trial1_perlmutter_build() {
 
   BUILD_TYPE=Release
-  HARDWARE_TYPE=CPU
+  HARDWARE_TYPE=GPU
 
   if [ $# -eq 1 ]
   then
