@@ -18,13 +18,17 @@ subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V
   REAL(rp),INTENT(IN) :: dt,x_norm,v_norm
   CHARACTER(100),INTENT(IN) :: field_type
 
+  !$acc routine (intper_fields) seq
+
 #ifdef ACC  
-  !$acc  parallel loop private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop, &
+  !$acc  parallel loop &
+  !$acc& private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop, &
   !$acc& V_Y_loop,V_Z_loop,gam_loop)
 #endif ACC
 
 #ifdef OMP
-  !$omp parallel do default(none) &
+  !$omp  parallel do &
+  !$omp& default(none) &
   !$omp& firstprivate(dt,nRE,t_steps,field_type) &
   !$omp& shared(X_X,X_Y,X_Z,V_X,V_Y,V_Z,gam,B_X,B_Y,B_Z,E_X,E_Y,E_Z) &
   !$omp& private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop,V_Y_loop,V_Z_loop,gam_loop, &
@@ -134,9 +138,9 @@ subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V
        !write(data_write,*) 'X: ',X_X_loop*x_norm,X_Y_loop*x_norm,X_Z_loop*x_norm
  
     end do
-#ifdef ACC  
-    !$acc end loop seq
-#endif ACC
+!#ifdef ACC  
+!    !$acc end loop seq
+!#endif ACC
  
     X_X(pp)=X_X_loop
     X_Y(pp)=X_Y_loop
