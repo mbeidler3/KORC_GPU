@@ -41,6 +41,10 @@ TYPE(KORC_2D_FIELDS_INTERPOLANT), PRIVATE      :: efield_2d
 INTEGER                                        :: ezerr
 !! Error status during PSPLINE interpolations.
 
+!$acc declare create(bfield_2d)
+!$acc declare create(efield_2d)
+!$acc declare create(ezerr)
+
 PUBLIC :: interp_fields,initialize_interpolants,finalize_interpolants
 #endif
 

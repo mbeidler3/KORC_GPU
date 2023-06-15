@@ -141,27 +141,8 @@ _scenario_gpu_trial1_mattlaptop_run() {
 
 _scenario_gpu_trial1_perlmutter_build() {
 
-  BUILD_TYPE=Release
+  BUILD_TYPE=Debug
   HARDWARE_TYPE=GPU
-
-  if [ $# -eq 1 ]
-  then
-      BUILD_TYPE=Debug
-  fi
-
-  echo cmake configured to generate a $BUILD_TYPE build.
-  if [ "$BUILD_TYPE" == Debug ]
-  then
-      echo "    cmake may be reconfigured to generate a Release build by running this     "
-      echo "    script with no arguments or using the commmand                            "
-      echo
-      echo "    cmake -DCMAKE_BUILD_TYPE=Release                                          "
-  else
-      echo "    cmake may be reconfigured to generate a Debug build by running this script"
-      echo "    with a Debug argument or using the commmand                               "
-      echo
-      echo "    cmake -DCMAKE_BUILD_TYPE=Debug                                            "
-  fi
 
   rm -f CMakeCache.txt
   rm -rf CMakeFiles
