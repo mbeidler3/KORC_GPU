@@ -169,7 +169,7 @@ if (field_type.eq.'PSPLINE') then
          E_X(pp),E_Y(pp),E_Z(pp))
    enddo
 endif
-#endif
+#endif PSPLINE
 
 write(output_write,'("B: ",E17.10,E17.10,E17.10)') &
    B_X(1)*b_norm,B_Y(1)*b_norm,B_Z(1)*b_norm
@@ -209,7 +209,8 @@ write(output_write,'("Setup time: ",E17.10)') (c2-c1)/rate
 
 write(output_write,'("* * * * * * * * * Begin Orbits * * * * * * * * *")')
 
-call FO_push(nRE,dt,X_X,X_Y,X_Z,V_Z,V_Y,V_Z,B_X,B_Y,B_Z,E_X,E_Y,E_Z)
+call FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_Z,V_Y,V_Z, &
+  gam,B_X,B_Y,B_Z,E_X,E_Y,E_Z)
 
 write(output_write,'("* * * * * * * * * Final Conditions * * * * * * * * *")')
 write(output_write,'("V: ",E17.10,E17.10,E17.10)') V_X(1)*v_norm,V_Y(1)*v_norm,V_Z(1)*v_norm
@@ -226,7 +227,7 @@ write(output_write,'("Pusher time: ",E17.10)') (c1-c2)/rate
 if (field_type.eq.'PSPLINE') then
    call finalize_interpolants
 endif
-#endif
+#endif PSPLINE
 
 write(output_write,'("KORC ran suppessfully!")')
 close(output_write)

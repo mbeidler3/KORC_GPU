@@ -5,7 +5,7 @@ use params_gpu
 #ifdef PSPLINE
 use EZspline_obj	! psplines module
 use EZspline		! psplines module
-#endif
+#endif PSPLINE
 
 IMPLICIT NONE
   
@@ -151,6 +151,6 @@ subroutine finalize_interpolants
     call Ezspline_free(efield_2d%Z, ezerr)
   
 end subroutine finalize_interpolants
-#endif
+#endif PSPLINE
   
 end module interp_gpu

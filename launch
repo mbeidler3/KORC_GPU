@@ -113,6 +113,7 @@ _scenario_gpu_trial1_mattlaptop_build() {
 
   cmake \
       -DCMAKE_BUILD_TYPE:String=$BUILD_TYPE \
+      -DUSE_OMP=ON \
       -DCMAKE_Fortran_FLAGS="-O3 -fopenmp -fallow-argument-mismatch -malign-double" \
       -DCMAKE_C_FLAGS="-O3 -fopenmp -malign-double"  \
       -DCMAKE_CXX_FLAGS="-O3 -fopenmp -malign-double" \
@@ -174,6 +175,7 @@ _scenario_gpu_trial1_perlmutter_build() {
   then
     cmake \
         -DCMAKE_BUILD_TYPE:String=$BUILD_TYPE \
+        -DUSE_OMP=ON \
         -DCMAKE_Fortran_FLAGS="-Mfree -Mpreprocess -r8 -fPIC -O3 -mp" \
         -DCMAKE_Fortran_FLAGS_DEBUG="-g -Minfo=all -Minstrument -traceback -lnvhpcwrapnvtx" \
         -DUSE_PSPLINE=ON \
@@ -185,6 +187,8 @@ _scenario_gpu_trial1_perlmutter_build() {
   then
     cmake \
         -DCMAKE_BUILD_TYPE:String=$BUILD_TYPE \
+        -DUSE_OMP=OFF \
+        -DUSE_ACC=ON \
         -DCMAKE_Fortran_FLAGS="-fast -acc=gpu -gpu=cc80 -Mfree -fPIC -O3 -Mpreprocess" \
         -DCMAKE_Fortran_FLAGS_DEBUG="-g -Minfo=all -Minstrument -traceback -lnvhpcwrapnvtx" \
         -DUSE_PSPLINE=ON \

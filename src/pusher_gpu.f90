@@ -7,16 +7,31 @@ IMPLICIT NONE
 
 CONTAINS
 
-subroutine FO_push(nRE,dt,X_X,X_Y,X_Z,V_X,V_Y,V_Z,B_X,B_Y,B_Z,E_X,E_Y,E_Z)
+subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V_Z, &
+   gam,B_X,B_Y,B_Z,E_X,E_Y,E_Z)
   REAL(rp),DIMENSION(nRE),INTENT(INOUT) :: X_X,X_Y,X_Z
   REAL(rp),DIMENSION(nRE),INTENT(INOUT) :: V_X,V_Y,V_Z
+  REAL(rp),DIMENSION(nRE),INTENT(INOUT) :: gam
   REAL(rp),DIMENSION(nRE),INTENT(IN) :: B_X,B_Y,B_Z
   REAL(rp),DIMENSION(nRE),INTENT(IN) :: E_X,E_Y,E_Z
-  INTEGER :: nRE
-  REAL(rp) :: dt
+  INTEGER,INTENT(IN) :: nRE,t_steps
+  REAL(rp),INTENT(IN) :: dt,x_norm,v_norm
+  CHARACTER(100),INTENT(IN) :: field_type
 
-! !$acc  parallel loop private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop, &
-! !$acc& V_Y_loop,V_Z_loop,gam_loop)
+#ifdef ACC  
+  !$acc  parallel loop private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop, &
+  !$acc& V_Y_loop,V_Z_loop,gam_loop)
+#endif ACC
+
+#ifdef OMP
+  !$omp parallel do default(none) &
+  !$omp& firstprivate(dt,nRE,t_steps,field_type) &
+  !$omp& shared(X_X,X_Y,X_Z,V_X,V_Y,V_Z,gam,B_X,B_Y,B_Z,E_X,E_Y,E_Z) &
+  !$omp& private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop,V_Y_loop,V_Z_loop,gam_loop, &
+  !$omp& B_X_loop,B_Y_loop,B_Z_loop,E_X_loop,E_Y_loop,E_Z_loop,U_X,U_Y,U_Z, &
+  !$omp& cross_X,cross_Y,cross_z,U_hs_X,U_hs_Y,U_hs_Z,tau_X,tau_Y,tau_Z, &
+  !$omp& up_X,up_Y,up_Z,gp,sigma,us,t_X,t_Y,t_Z,s) 
+#endif OMP
   do pp=1,nRE
 
     X_X_loop=X_X(pp)
@@ -43,7 +58,9 @@ subroutine FO_push(nRE,dt,X_X,X_Y,X_Z,V_X,V_Y,V_Z,B_X,B_Y,B_Z,E_X,E_Y,E_Z)
     X_Z_loop = X_Z_loop+dt/2*V_Z_loop
  
  !   !! Main iteration loop
- !   !$acc loop seq
+#ifdef ACC  
+    !$acc loop seq
+#endif ACC
     do it=1,t_steps
  
        U_X = gam_loop*V_X_loop
@@ -55,7 +72,7 @@ subroutine FO_push(nRE,dt,X_X,X_Y,X_Z,V_X,V_Y,V_Z,B_X,B_Y,B_Z,E_X,E_Y,E_Z)
             call interp_fields(X_X_loop,X_Y_loop,B_X_loop,B_Y_loop,B_Z_loop, &
               E_X_loop,E_Y_loop,E_Z_loop)
        endif
-#endif
+#endif PSPLINE
 
        ! LEAP-FROG SCHEME FOR LORENTZ FORCE !
  
@@ -113,11 +130,13 @@ subroutine FO_push(nRE,dt,X_X,X_Y,X_Z,V_X,V_Y,V_Z,B_X,B_Y,B_Z,E_X,E_Y,E_Z)
        X_Y_loop = X_Y_loop + dt*V_Y_loop
        X_Z_loop = X_Z_loop + dt*V_Z_loop
  
-       write(data_write,*) 'V: ',V_X_loop*v_norm,V_Y_loop*v_norm,V_Z_loop*v_norm
-       write(data_write,*) 'X: ',X_X_loop*x_norm,X_Y_loop*x_norm,X_Z_loop*x_norm
+       !write(data_write,*) 'V: ',V_X_loop*v_norm,V_Y_loop*v_norm,V_Z_loop*v_norm
+       !write(data_write,*) 'X: ',X_X_loop*x_norm,X_Y_loop*x_norm,X_Z_loop*x_norm
  
     end do
- !    !$acc end loop seq
+#ifdef ACC  
+    !$acc end loop seq
+#endif ACC
  
     X_X(pp)=X_X_loop
     X_Y(pp)=X_Y_loop
@@ -129,8 +148,14 @@ subroutine FO_push(nRE,dt,X_X,X_Y,X_Z,V_X,V_Y,V_Z,B_X,B_Y,B_Z,E_X,E_Y,E_Z)
  
     gam(pp)=gam_loop
     
- end do
- ! !$acc end parallel loop
+  end do
+#ifdef ACC  
+  !$acc end parallel loop
+#endif ACC
+
+#ifdef OMP
+  !$omp end parallel do
+#endif
 
 end subroutine FO_push
 

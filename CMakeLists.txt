@@ -15,10 +15,19 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
    add_definitions (-DDBG_CHECK)
 endif()
 
-#  Configure OpenMP
-#find_package (OpenMP)
-#set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_Fortran_FLAGS}")
-#set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_Fortran_FLAGS}")
+#Configure OpenMP
+option (USE_OMP "Use OpenOMP" OFF)
+if (${USE_OMP})
+   find_package (OpenMP)
+   set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_Fortran_FLAGS}")
+   set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_Fortran_FLAGS}")
+   add_definitions (-DOMP)
+endif()
+
+option (USE_ACC "Use OpenACC" OFF)
+if (${USE_ACC})
+   add_definitions (-DACC)
+endif()
 
 #  Configure HDF5
 #find_package (HDF5 REQUIRED COMPONENTS Fortran)
