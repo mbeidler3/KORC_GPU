@@ -29,7 +29,7 @@ _error_fatal() {
 
 _platform_korcgpu_match() {
 
-  [[ $(HOSTNAME) =~ korcgpu ]] || return 1
+  [[ $HOSTNAME =~ korcgpu ]] || return 1
 }
 
 _platform_korcgpu_setup() {
