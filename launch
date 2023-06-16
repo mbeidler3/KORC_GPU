@@ -143,6 +143,8 @@ _scenario_gpu_trial1_perlmutter_build() {
 
   BUILD_TYPE=Debug
   HARDWARE_TYPE=GPU
+ 
+  echo cmake configured to generate a $BUILD_TYPE build.
 
   rm -f CMakeCache.txt
   rm -rf CMakeFiles
@@ -181,7 +183,7 @@ _scenario_gpu_trial1_perlmutter_build() {
     echo " choose a valid hardware type "
   fi
 
-  [[ $? -eq 0 ]] && make
+  [[ $? -eq 0 ]] && make VERBOSE=1
 
   LAUNCHKIT_RUNTIME_PATH_EXE="$(pwd -P)/build/bin/xkorcgpu"
   cd - >/dev/null
