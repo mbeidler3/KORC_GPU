@@ -66,7 +66,7 @@ _platform_perlmutter_setup() {
 _scenario_gpu_trial1_korcgpu_build() {
 
   BUILD_TYPE=Debug
-  HARDWARE_TYPE=GPU
+  HARDWARE_TYPE=CPU
  
   echo cmake configured to generate a $BUILD_TYPE build.
 
@@ -85,7 +85,7 @@ _scenario_gpu_trial1_korcgpu_build() {
         -DUSE_OMP=OFF \
         -DCMAKE_Fortran_FLAGS="-Mfree -Mpreprocess -r8 -fPIC -O3 -mp" \
         -DCMAKE_Fortran_FLAGS_DEBUG="-g -Minfo=all -Minstrument -traceback -lnvhpcwrapnvtx" \
-        -DUSE_PSPLINE=ON \
+        -DUSE_PSPLINE=OFF \
         -DPSPLINE_INCLUDE_PATH=/global/cfs/cdirs/m3236/build_unstable/PSPLINE_GH/pspline/build/include \
         -DPSPLINE_LINK_FLAGS="-L/global/cfs/cdirs/m3236/build_unstable/PSPLINE_GH/pspline/build/lib -lpspline" \
         -DPSPLINE_LIBRARIES=/global/cfs/cdirs/m3236/build_unstable/PSPLINE_GH/pspline/build/lib/libpspline.a   \
@@ -96,7 +96,7 @@ _scenario_gpu_trial1_korcgpu_build() {
         -DCMAKE_BUILD_TYPE:String=$BUILD_TYPE \
         -DUSE_OMP=OFF \
         -DUSE_ACC=ON \
-        -DCMAKE_Fortran_FLAGS="-fast -acc=gpu -gpu=cc80 -Mfree -fPIC -O3 -Mpreprocess" \
+        -DCMAKE_Fortran_FLAGS="-fast -acc=gpu -gpu=cc70 -Mfree -fPIC -O3 -Mpreprocess" \
         -DCMAKE_Fortran_FLAGS_DEBUG="-g -Minfo=all -Minstrument -traceback -lnvhpcwrapnvtx" \
         -DUSE_PSPLINE=OFF \
         -DPSPLINE_INCLUDE_PATH=/global/cfs/cdirs/m3236/build_gpu_test/PSPLINE_GH/pspline/build/include \
