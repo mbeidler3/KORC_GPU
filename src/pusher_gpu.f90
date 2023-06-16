@@ -19,16 +19,22 @@ subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V
   CHARACTER(100),INTENT(IN) :: field_type
 
 #ifdef ACC 
-  !$acc routine (intper_fields) seq
-#endif
 
-#ifdef ACC  
+#ifdef PSPLINE
+  !$acc routine (intper_fields) seq
+#endif 
+
+  write(output_write,'("Using OpenACC")')
+
   !$acc  parallel loop &
   !$acc& private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop, &
   !$acc& V_Y_loop,V_Z_loop,gam_loop)
 #endif ACC
 
 #ifdef OMP
+
+  write(output_write,'("Using OpenMP")')
+
   !$omp  parallel do &
   !$omp& default(none) &
   !$omp& firstprivate(dt,nRE,t_steps,field_type) &
