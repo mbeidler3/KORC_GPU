@@ -57,7 +57,7 @@ subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V
     E_Z_loop=E_Z(pp)
  
     gam_loop=gam(pp)
- 
+
     !! Initial half step
     X_X_loop = X_X_loop+dt/2*V_X_loop
     X_Y_loop = X_Y_loop+dt/2*V_Y_loop
@@ -86,13 +86,9 @@ subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V
        cross_Y=V_Z_loop*B_X_loop-V_X_loop*B_Z_loop
        cross_Z=V_X_loop*B_Y_loop-V_Y_loop*B_X_loop
  
-       !write(6,*) 'vcrossB',cross_X,cross_Y,cross_Z
- 
        U_hs_X = U_X + 0.5*dt*(E_X_loop +cross_X)
        U_hs_Y = U_Y + 0.5*dt*(E_Y_loop +cross_Y)
        U_hs_Z = U_Z + 0.5*dt*(E_Z_loop +cross_Z)
- 
-       !write(6,*) 'half step',0.5*a*cross_X(pp),0.5*a*cross_Y(pp),0.5*a*cross_Z(pp)
  
        tau_X = 0.5*dt*B_X_loop
        tau_Y = 0.5*dt*B_Y_loop
@@ -135,9 +131,6 @@ subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V
        X_X_loop = X_X_loop + dt*V_X_loop
        X_Y_loop = X_Y_loop + dt*V_Y_loop
        X_Z_loop = X_Z_loop + dt*V_Z_loop
- 
-       write(data_write,'("V: ",E17.10,E17.10,E17.10)') V_X_loop*v_norm,V_Y_loop*v_norm,V_Z_loop*v_norm
-       write(data_write,'("X: ",E17.10,E17.10,E17.10)') X_X_loop*x_norm,X_Y_loop*x_norm,X_Z_loop*x_norm
  
     end do
  

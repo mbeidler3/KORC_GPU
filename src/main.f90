@@ -209,7 +209,7 @@ write(output_write,'("Setup time: ",E17.10)') (c2-c1)/rate
 
 write(output_write,'("* * * * * * * * * Begin Orbits * * * * * * * * *")')
 
-call FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_Z,V_Y,V_Z, &
+call FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V_Z, &
   gam,B_X,B_Y,B_Z,E_X,E_Y,E_Z)
 
 write(output_write,'("* * * * * * * * * Final Conditions * * * * * * * * *")')

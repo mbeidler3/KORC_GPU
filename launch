@@ -115,26 +115,9 @@ _scenario_gpu_trial1_korcgpu_build() {
 
 _scenario_gpu_trial1_mattlaptop_build() {
 
-  BUILD_TYPE=Release
-
-  if [ $# -eq 1 ]
-  then
-      BUILD_TYPE=Debug
-  fi
-
+  BUILD_TYPE=Debug
+ 
   echo cmake configured to generate a $BUILD_TYPE build.
-  if [ "$BUILD_TYPE" == Debug ]
-  then
-      echo "    cmake may be reconfigured to generate a Release build by running this     "
-      echo "    script with no arguments or using the commmand                            "
-      echo
-      echo "    cmake -DCMAKE_BUILD_TYPE=Release                                          "
-  else
-      echo "    cmake may be reconfigured to generate a Debug build by running this script"
-      echo "    with a Debug argument or using the commmand                               "
-      echo
-      echo "    cmake -DCMAKE_BUILD_TYPE=Debug                                            "
-  fi
 
   rm -f CMakeCache.txt
   rm -rf CMakeFiles
@@ -146,14 +129,14 @@ _scenario_gpu_trial1_mattlaptop_build() {
 
   cmake \
       -DCMAKE_BUILD_TYPE:String=$BUILD_TYPE \
-      -DUSE_OMP=ON \
+      -DUSE_OMP=OFF \
       -DCMAKE_Fortran_FLAGS="-O3 -fopenmp -fallow-argument-mismatch -malign-double" \
       -DCMAKE_C_FLAGS="-O3 -fopenmp -malign-double"  \
       -DCMAKE_CXX_FLAGS="-O3 -fopenmp -malign-double" \
       -DCMAKE_Fortran_FLAGS_DEBUG="-g -ffpe-trap=invalid,zero,overflow -fbacktrace" \
       -DCMAKE_C_FLAGS_DEBUG="-g -g3" \
       -DCMAKE_CXX_FLAGS_DEBUG="-g -g3" \
-      -DUSE_PSPLINE=ON \
+      -DUSE_PSPLINE=OFF \
       -DPSPLINE_INCLUDE_PATH=/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/include \
       -DPSPLINE_LINK_FLAGS="-L/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/lib -lpspline" \
 	    -DPSPLINE_LIBRARIES=/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/lib/libpspline.a   \
