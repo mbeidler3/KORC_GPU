@@ -136,10 +136,7 @@ _scenario_gpu_trial1_mattlaptop_build() {
       -DCMAKE_Fortran_FLAGS_DEBUG="-g -ffpe-trap=invalid,zero,overflow -fbacktrace" \
       -DCMAKE_C_FLAGS_DEBUG="-g -g3" \
       -DCMAKE_CXX_FLAGS_DEBUG="-g -g3" \
-      -DUSE_PSPLINE=OFF \
-      -DPSPLINE_INCLUDE_PATH=/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/include \
-      -DPSPLINE_LINK_FLAGS="-L/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/lib -lpspline" \
-	    -DPSPLINE_LIBRARIES=/Users/21b/Desktop/KORC_PERIPHERALS/PSPLINE_GH/pspline/build/lib/libpspline.a   \
+      -DUSE_PSPLINE=ON \
     ..
 
   [[ $? -eq 0 ]] && make VERBOSE=1
