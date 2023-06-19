@@ -1937,7 +1937,6 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
   end subroutine vecbicub_FOvars
   
   subroutine xlookup(ivec,xvec,nx,xpkg,imode,iv,dxn,hv,hiv,iwarn)
-  
       !  vector lookup routine
       !
       !   given a set of x points xvec(...) and an x grid (xpkg, nx x pts)
@@ -1955,7 +1954,6 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
       !    if nx.eq.3:  xpkg(4,4) never referenced.
       !
       !  input:
-  
       !$acc routine seq
       implicit none
       integer inum,istat,ilin,ialg,iper,imsg,init_guess,iprev,i
@@ -3495,6 +3493,7 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
     end subroutine EZspline_free2
   
   subroutine EZspline_error(ier)
+      !$acc routine seq
       !
       ! Error handling routine. Maps error ier code to a meaningful message.
       ! Note: does not abort nor stop if ier/=0.

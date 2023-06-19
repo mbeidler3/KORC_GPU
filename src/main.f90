@@ -170,8 +170,6 @@ if (field_type.eq.'PSPLINE') then
    call initialize_interpolants(XF,YF,BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z)
 
 #ifdef ACC 
-  !$acc routine (intper_fields) seq
- 
   !$acc  parallel loop &
   !$acc& private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop, &
   !$acc& V_Y_loop,V_Z_loop,gam_loop)
