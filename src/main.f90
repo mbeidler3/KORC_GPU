@@ -4,7 +4,6 @@ use interp_gpu
 use params_gpu
 use pusher_gpu
 
-
 implicit none
 
 REAL(rp),ALLOCATABLE,DIMENSION(:) :: X_X,X_Y,X_Z
@@ -16,6 +15,12 @@ REAL(rp),DIMENSION(20,20) :: BF_X=0._rp,BF_Y=0._rp,BF_Z=0._rp
 REAL(rp),DIMENSION(20,20) :: EF_X=0._rp,EF_Y=0._rp,EF_Z=0._rp
 
 NAMELIST /input_parameters/ nRE,simulation_time,field_type
+
+#ifdef ACC 
+#ifdef PSPLINE
+  !$acc routine (intper_fields) seq
+#endif 
+#endif
 
 !! initialize system_clock
 CALL system_clock(count_rate=cr)
@@ -164,10 +169,44 @@ if (field_type.eq.'PSPLINE') then
 
    call initialize_interpolants(XF,YF,BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z)
 
+#ifdef ACC 
+  !$acc routine (intper_fields) seq
+ 
+  !$acc  parallel loop &
+  !$acc& private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop, &
+  !$acc& V_Y_loop,V_Z_loop,gam_loop)
+#endif ACC
    do pp=1,nRE
-      call interp_fields(X_X(pp),X_Y(pp),B_X(pp),B_Y(pp),B_Z(pp), &
-         E_X(pp),E_Y(pp),E_Z(pp))
+
+      X_X_loop=X_X(pp)
+      X_Y_loop=X_Y(pp)
+   
+      B_X_loop=B_X(pp)
+      B_Y_loop=B_Y(pp)
+      B_Z_loop=B_Z(pp)
+   
+      E_X_loop=E_X(pp)
+      E_Y_loop=E_Y(pp)
+      E_Z_loop=E_Z(pp)
+
+      call interp_fields(X_X_loop,X_Y_loop,B_X_loop,B_Y_loop,B_Z_loop, &
+         E_X_loop,E_Y_loop,E_Z_loop)
+
+      X_X(pp)=X_X_loop
+      X_Y(pp)=X_Y_loop
+
+      B_X(pp)=B_X_loop
+      B_Y(pp)=B_Y_loop
+      B_Z(pp)=B_Z_loop
+
+      E_X(pp)=E_X_loop
+      E_Y(pp)=E_Y_loop
+      E_Z(pp)=E_Z_loop
    enddo
+#ifdef ACC  
+  !$acc end parallel loop
+#endif ACC
+
 endif
 #endif PSPLINE
 

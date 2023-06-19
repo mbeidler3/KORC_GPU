@@ -1744,7 +1744,7 @@ subroutine ibc_ck(ibc,slbl,xlbl,imin,imax,ier)
   return
 end subroutine ibc_ck
 
-    subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
+subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
       spline_oBZ, spline_oER, spline_oEPHI, spline_oEZ,k, p1, p2, fBR, &
       fBPHI, fBZ, fER, fEPHI, fEZ, ier)
    !$acc routine seq
@@ -1769,7 +1769,6 @@ end subroutine ibc_ck
       ier = 94
       return
    endif
-  
   
    call vecbicub_FOvars(ict, k, p1, p2, k, fBR, fBPHI, fBZ, fER, fEPHI, &
         & fEZ, spline_oBR%n1, spline_oBR%x1pkg(1,1), &

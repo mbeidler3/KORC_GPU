@@ -124,13 +124,13 @@ subroutine initialize_interpolants(XF,YF,BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z)
 end subroutine initialize_interpolants
   
 subroutine interp_fields(XX,YY,BX,BY,BZ,EX,EY,EZ)
-    !$acc routine seq
+!    !$acc routine seq
     REAL(rp),INTENT(IN)   :: XX,YY
     REAL(rp),INTENT(OUT)   :: BX,BY,BZ,EX,EY,EZ
     REAL(rp),DIMENSION(1)   :: BX_i,BY_i,BZ_i,EX_i,EY_i,EZ_i
 
-    !$acc routine (EZspline_interp2_FOvars_cloud) seq
-    !$acc routine (EZspline_error) seq
+!    !$acc routine (EZspline_interp2_FOvars_cloud) seq
+!    !$acc routine (EZspline_error) seq
   
     call EZspline_interp2_FOvars_cloud(bfield_2d%X,bfield_2d%Y,bfield_2d%Z, &
         efield_2d%X,efield_2d%Y,efield_2d%Z,1,(/XX/),(/YY/),BX_i,BY_i,BZ_i,EX_i,EY_i,EZ_i,ezerr)
