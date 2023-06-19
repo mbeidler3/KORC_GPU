@@ -55,6 +55,9 @@ module pspline_gpu
       integer :: nguard
   end type EZspline2
   
+  PUBLIC :: EZspline_init2,EZspline_error,EZspline_setup2, &
+    EZspline_interp2_FOvars_cloud,Ezspline_free2
+
 #endif
   
   CONTAINS

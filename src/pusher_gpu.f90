@@ -21,7 +21,7 @@ subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V
 #ifdef ACC 
 
 #ifdef PSPLINE
-  !$acc routine (intper_fields) seq
+  !$acc routine (interp_fields) seq
 #endif 
 
   write(output_write,'("Using OpenACC")')

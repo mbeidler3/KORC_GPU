@@ -18,7 +18,7 @@ NAMELIST /input_parameters/ nRE,simulation_time,field_type
 
 #ifdef ACC 
 #ifdef PSPLINE
-  !$acc routine (intper_fields) seq
+  !$acc routine (interp_fields) seq
 #endif 
 #endif
 
