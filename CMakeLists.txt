@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.8.8)
 
-project (korcgpu_proj Fortran C CXX)
+project (korcgpu_proj Fortran)
 
 #  Set directories to build all binary files.
 set (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/build/bin)
