@@ -8,7 +8,7 @@ IMPLICIT NONE
 CONTAINS
 
 subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V_Z, &
-   gam,B_X,B_Y,B_Z,E_X,E_Y,E_Z)
+   gam,B_X,B_Y,B_Z,E_X,E_Y,E_Z,bfield_2d,efield_2d)
   REAL(rp),DIMENSION(nRE),INTENT(INOUT) :: X_X,X_Y,X_Z
   REAL(rp),DIMENSION(nRE),INTENT(INOUT) :: V_X,V_Y,V_Z
   REAL(rp),DIMENSION(nRE),INTENT(INOUT) :: gam
@@ -17,6 +17,11 @@ subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V
   INTEGER,INTENT(IN) :: nRE,t_steps
   REAL(rp),INTENT(IN) :: dt,x_norm,v_norm
   CHARACTER(100),INTENT(IN) :: field_type
+#ifdef PSPLINE
+  TYPE(KORC_2D_FIELDS_INTERPOLANT),INTENT(IN) :: bfield_2d,efield_2d
+#else
+  real(rp),optional :: bfield_2d,efield_2d !just placeholders
+#endif PSPLINE
 
 #ifdef ACC 
 
@@ -82,7 +87,7 @@ subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V
 #ifdef PSPLINE
        if (field_type.eq.'PSPLINE') then
             call interp_fields(X_X_loop,X_Y_loop,B_X_loop,B_Y_loop,B_Z_loop, &
-              E_X_loop,E_Y_loop,E_Z_loop)
+              E_X_loop,E_Y_loop,E_Z_loop,bfield_2d,efield_2d)
        endif
 #endif PSPLINE
 

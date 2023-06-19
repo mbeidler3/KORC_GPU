@@ -1761,8 +1761,7 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
    integer :: ifail
    integer, parameter :: ict(6) = (/1,0,0,0,0,0/)
    integer:: iwarn = 0
-   !$acc declare create(spline_oBR,spline_oBPHI,spline_oBZ)
-   !$acc declare create(spline_oER,spline_oEPHI,spline_oEZ)
+
    !$acc routine (EZspline_allocated2) seq
    !$acc routine (vecbicub_FOvars) seq
   

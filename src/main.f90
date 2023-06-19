@@ -13,7 +13,14 @@ REAL(rp),ALLOCATABLE,DIMENSION(:) :: E_X,E_Y,E_Z
 REAL(rp),DIMENSION(20) :: XF=0._rp,YF=0._rp
 REAL(rp),DIMENSION(20,20) :: BF_X=0._rp,BF_Y=0._rp,BF_Z=0._rp
 REAL(rp),DIMENSION(20,20) :: EF_X=0._rp,EF_Y=0._rp,EF_Z=0._rp
-
+#ifdef PSPLINE
+TYPE(KORC_2D_FIELDS_INTERPOLANT)      :: bfield_2d
+!! An instance of KORC_2D_FIELDS_INTERPOLANT for interpolating
+!! the magnetic field.
+TYPE(KORC_2D_FIELDS_INTERPOLANT)   :: efield_2d
+!! An instance of KORC_2D_FIELDS_INTERPOLANT for interpolating
+!! the electric field.
+#endif PSPLINE
 NAMELIST /input_parameters/ nRE,simulation_time,field_type
 
 #ifdef ACC 
@@ -167,7 +174,8 @@ if (field_type.eq.'PSPLINE') then
    EF_Y=EF_Y/(b_norm*v_norm)
    EF_Z=EF_Z/(b_norm*v_norm)
 
-   call initialize_interpolants(XF,YF,BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z)
+   call initialize_interpolants(XF,YF,BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z, &
+     bfield_2d,efield_2d)
 
 #ifdef ACC 
   !$acc  parallel loop &
@@ -188,7 +196,7 @@ if (field_type.eq.'PSPLINE') then
       E_Z_loop=E_Z(pp)
 
       call interp_fields(X_X_loop,X_Y_loop,B_X_loop,B_Y_loop,B_Z_loop, &
-         E_X_loop,E_Y_loop,E_Z_loop)
+         E_X_loop,E_Y_loop,E_Z_loop,bfield_2d,efield_2d)
 
       X_X(pp)=X_X_loop
       X_Y(pp)=X_Y_loop
@@ -221,6 +229,7 @@ write(output_write,'("X0: ",E17.10,E17.10,E17.10)') X_X(1)*x_norm,X_Y(1)*x_norm,
 write(output_write,'("V0: ",E17.10,E17.10,E17.10)') V_X(1)*v_norm,V_Y(1)*v_norm,V_Z(1)*v_norm
 write(data_write,'("X0: ",E17.10,E17.10,E17.10)') X_X(1)*x_norm,X_Y(1)*x_norm,X_Z(1)*x_norm
 write(data_write,'("V0: ",E17.10,E17.10,E17.10)') V_X(1)*v_norm,V_Y(1)*v_norm,V_Z(1)*v_norm
+flush(output_write)
 
 !! Set timestep to resolve relativistic gyrofrequency, simulation time and
 !! number of time steps
@@ -228,13 +237,18 @@ dt = 0.01_rp*(2.0_rp*C_PI/(C_E*B_Z(1)/( gam0*C_ME )))/t_norm
 
 simulation_time=simulation_time/t_norm
 t_steps=ceiling(simulation_time/dt)
-dt=simulation_time/real(t_steps)
+if (t_steps.eq.0) then
+   dt=0._rp
+else
+   dt=simulation_time/real(t_steps)
+endif
 
 write(output_write,*) '* * * * * * * * * Timings * * * * * * * * *'
 
 write(output_write,'("simulation time: ",E17.10)') simulation_time*t_norm
 write(output_write,'("dt: ",E17.10)') dt*t_norm
 write(output_write,'("t_steps: ",I16)') t_steps
+flush(output_write)
 
 !! Particle push
 
@@ -246,8 +260,13 @@ write(output_write,'("Setup time: ",E17.10)') (c2-c1)/rate
 
 write(output_write,'("* * * * * * * * * Begin Orbits * * * * * * * * *")')
 
+#ifdef PSPLINE
+call FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V_Z, &
+  gam,B_X,B_Y,B_Z,E_X,E_Y,E_Z,bfield_2d,efield_2d)
+#else
 call FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V_Z, &
   gam,B_X,B_Y,B_Z,E_X,E_Y,E_Z)
+#endif PSPLINE
 
 write(output_write,'("* * * * * * * * * Final Conditions * * * * * * * * *")')
 write(output_write,'("V: ",E17.10,E17.10,E17.10)') V_X(1)*v_norm,V_Y(1)*v_norm,V_Z(1)*v_norm
@@ -262,7 +281,7 @@ write(output_write,'("Pusher time: ",E17.10)') (c1-c2)/rate
 
 #ifdef PSPLINE
 if (field_type.eq.'PSPLINE') then
-   call finalize_interpolants
+   call finalize_interpolants(bfield_2d,efield_2d)
 endif
 #endif PSPLINE
 

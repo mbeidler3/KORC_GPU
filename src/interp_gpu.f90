@@ -30,28 +30,17 @@ TYPE :: KORC_2D_FIELDS_INTERPOLANT
     !! ends of the \(Z\) direction.
 END TYPE KORC_2D_FIELDS_INTERPOLANT 
 
-TYPE(KORC_2D_FIELDS_INTERPOLANT)      :: bfield_2d
-!! An instance of KORC_2D_FIELDS_INTERPOLANT for interpolating
-!! the magnetic field.
-TYPE(KORC_2D_FIELDS_INTERPOLANT)   :: efield_2d
-!! An instance of KORC_2D_FIELDS_INTERPOLANT for interpolating
-!! the electric field.
-INTEGER                                        :: ezerr
-!! Error status during PSPLINE interpolations.
-
-!$acc declare create(bfield_2d)
-!$acc declare create(efield_2d)
-!$acc declare create(ezerr)
-
 #endif
 
 CONTAINS
 
 #ifdef PSPLINE
 
-subroutine initialize_interpolants(XF,YF,BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z)
+subroutine initialize_interpolants(XF,YF,BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z,bfield_2d,efield_2d)
     REAL(rp),DIMENSION(20), INTENT(IN) :: XF,YF
     REAL(rp),DIMENSION(20,20), INTENT(IN) :: BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z
+    TYPE(KORC_2D_FIELDS_INTERPOLANT),INTENT(INOUT) :: bfield_2d,efield_2d
+    INTEGER                                        :: ezerr
   
     write(output_write,'("* * * * INITIALIZING FIELDS INTERPOLANT * * * *")')
 
@@ -123,11 +112,13 @@ subroutine initialize_interpolants(XF,YF,BF_X,BF_Y,BF_Z,EF_X,EF_Y,EF_Z)
 
 end subroutine initialize_interpolants
   
-subroutine interp_fields(XX,YY,BX,BY,BZ,EX,EY,EZ)
+subroutine interp_fields(XX,YY,BX,BY,BZ,EX,EY,EZ,bfield_2d,efield_2d)
     !$acc routine seq
     REAL(rp),INTENT(IN)   :: XX,YY
     REAL(rp),INTENT(OUT)   :: BX,BY,BZ,EX,EY,EZ
     REAL(rp),DIMENSION(1)   :: BX_i,BY_i,BZ_i,EX_i,EY_i,EZ_i
+    TYPE(KORC_2D_FIELDS_INTERPOLANT),INTENT(IN) :: bfield_2d,efield_2d
+    INTEGER                                        :: ezerr
 
     !$acc routine (EZspline_interp2_FOvars_cloud) seq
     !$acc routine (EZspline_error) seq
@@ -145,7 +136,9 @@ subroutine interp_fields(XX,YY,BX,BY,BZ,EX,EY,EZ)
   
 end subroutine
   
-subroutine finalize_interpolants  
+subroutine finalize_interpolants(bfield_2d,efield_2d)  
+   TYPE(KORC_2D_FIELDS_INTERPOLANT),INTENT(IN) :: bfield_2d,efield_2d
+   INTEGER                                        :: ezerr
 
     call Ezspline_free2(bfield_2d%X, ezerr)
     call Ezspline_free2(bfield_2d%Y, ezerr)
