@@ -1748,12 +1748,12 @@ subroutine ibc_ck(ibc,slbl,xlbl,imin,imax,ier)
 end subroutine ibc_ck
 
 subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
-      spline_oBZ, spline_oER, spline_oEPHI, spline_oEZ,k, p1, p2, fBR, &
+      spline_oBZ, spline_oER, spline_oEPHI, spline_oEZ, p1, p2, fBR, &
       fBPHI, fBZ, fER, fEPHI, fEZ, ier)
    !$acc routine seq
    type(EZspline2) spline_oBR,spline_oBPHI,spline_oBZ
    type(EZspline2) spline_oER,spline_oEPHI,spline_oEZ
-   integer, intent(in) :: k
+   integer, parameter :: k=1
    real(fp), intent(in) :: p1(k), p2(k)
    real(fp), intent(out):: fBR(k), fBPHI(k), fBZ(k)
    real(fp), intent(out):: fER(k), fEPHI(k), fEZ(k)

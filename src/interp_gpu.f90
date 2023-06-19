@@ -133,7 +133,7 @@ subroutine interp_fields(XX,YY,BX,BY,BZ,EX,EY,EZ)
     !$acc routine (EZspline_error) seq
   
     call EZspline_interp2_FOvars_cloud(bfield_2d%X,bfield_2d%Y,bfield_2d%Z, &
-        efield_2d%X,efield_2d%Y,efield_2d%Z,1,(/XX/),(/YY/),BX_i,BY_i,BZ_i,EX_i,EY_i,EZ_i,ezerr)
+        efield_2d%X,efield_2d%Y,efield_2d%Z,(/XX/),(/YY/),BX_i,BY_i,BZ_i,EX_i,EY_i,EZ_i,ezerr)
     call EZspline_error(ezerr)
 
     BX=BX_i(1)
