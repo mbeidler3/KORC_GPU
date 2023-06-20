@@ -1746,6 +1746,43 @@ subroutine ibc_ck(ibc,slbl,xlbl,imin,imax,ier)
 
   return
 end subroutine ibc_ck
+
+subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
+      spline_oBZ, spline_oER, spline_oEPHI, spline_oEZ, p1, p2, fBR, &
+      fBPHI, fBZ, fER, fEPHI, fEZ, ier)
+   !$acc routine seq
+   type(EZspline2) spline_oBR,spline_oBPHI,spline_oBZ
+   type(EZspline2) spline_oER,spline_oEPHI,spline_oEZ
+   real(fp), intent(in) :: p1(1), p2(1)
+   real(fp), intent(out):: fBR(1), fBPHI(1), fBZ(1)
+   real(fp), intent(out):: fER(1), fEPHI(1), fEZ(1)
+   integer, intent(out) :: ier
+   integer :: ifail
+   integer, parameter :: ict(6) = (/1,0,0,0,0,0/)
+   integer:: iwarn = 0
+
+   !$acc routine (EZspline_allocated2) seq
+   !$acc routine (vecbicub_FOvars) seq
+  
+   ier = 0
+   ifail = 0
+  
+   if( .not.EZspline_allocated2(spline_oBR) .or. spline_oBR%isReady /= 1) then
+      ier = 94
+      return
+   endif
+  
+   call vecbicub_FOvars(ict, 1, p1, p2, 1, fBR, fBPHI, fBZ, fER, fEPHI, &
+        & fEZ, spline_oBR%n1, spline_oBR%x1pkg, &
+        & spline_oBR%n2, spline_oBR%x2pkg, &
+        & spline_oBR%fspl, spline_oBPHI%fspl, &
+        & spline_oBZ%fspl, spline_oER%fspl, &
+        & spline_oEPHI%fspl, spline_oEZ%fspl, &
+        & spline_oBR%n1, iwarn, ifail)
+  
+   if(ifail /= 0) ier = 97
+  
+  end subroutine EZspline_interp2_FOvars_cloud
   
   logical function EZspline_allocated2(spline_o)
   !$acc routine seq
@@ -1898,43 +1935,6 @@ end subroutine ibc_ck
   return
   end subroutine vecbicub_FOvars
   
-  subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
-   spline_oBZ, spline_oER, spline_oEPHI, spline_oEZ, p1, p2, fBR, &
-   fBPHI, fBZ, fER, fEPHI, fEZ, ier)
-!$acc routine seq
-type(EZspline2) spline_oBR,spline_oBPHI,spline_oBZ
-type(EZspline2) spline_oER,spline_oEPHI,spline_oEZ
-real(fp), intent(in) :: p1(1), p2(1)
-real(fp), intent(out):: fBR(1), fBPHI(1), fBZ(1)
-real(fp), intent(out):: fER(1), fEPHI(1), fEZ(1)
-integer, intent(out) :: ier
-integer :: ifail
-integer, parameter :: ict(6) = (/1,0,0,0,0,0/)
-integer:: iwarn = 0
-
-!$acc routine (EZspline_allocated2) seq
-!$acc routine (vecbicub_FOvars) seq
-
-ier = 0
-ifail = 0
-
-if( .not.EZspline_allocated2(spline_oBR) .or. spline_oBR%isReady /= 1) then
-   ier = 94
-   return
-endif
-
-call vecbicub_FOvars(ict, 1, p1, p2, 1, fBR, fBPHI, fBZ, fER, fEPHI, &
-     & fEZ, spline_oBR%n1, spline_oBR%x1pkg, &
-     & spline_oBR%n2, spline_oBR%x2pkg, &
-     & spline_oBR%fspl, spline_oBPHI%fspl, &
-     & spline_oBZ%fspl, spline_oER%fspl, &
-     & spline_oEPHI%fspl, spline_oEZ%fspl, &
-     & spline_oBR%n1, iwarn, ifail)
-
-if(ifail /= 0) ier = 97
-
-end subroutine EZspline_interp2_FOvars_cloud
-
   subroutine xlookup(ivec,xvec,nx,xpkg,imode,iv,dxn,hv,hiv,iwarn)
       !  vector lookup routine
       !
