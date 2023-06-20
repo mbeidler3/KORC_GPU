@@ -1758,12 +1758,11 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
    real(fp), intent(out):: fER(1), fEPHI(1), fEZ(1)
    integer, intent(out) :: ier
    integer :: ifail
-   integer, parameter :: ict(6) = (/1,0,0,0,0,0/)
    integer:: iwarn = 0
 
    !$acc routine (EZspline_allocated2) seq
    !$acc routine (vecbicub_FOvars) seq
-  
+
    ier = 0
    ifail = 0
   
@@ -1778,7 +1777,7 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
        fsplBZ => spline_oBZ%fspl, fsplER => spline_oER%fspl, &
        fsplEPHI => spline_oEPHI%fspl, fsplEZ => spline_oEZ%fspl)
 
-   call vecbicub_FOvars(ict, 1, p1, p2, 1, fBR, fBPHI, fBZ, fER, fEPHI, &
+   call vecbicub_FOvars(1, p1, p2, 1, fBR, fBPHI, fBZ, fER, fEPHI, &
         & fEZ, n1, x1pkg, &
         & n2, x2pkg, &
         & fsplBR, fsplBPHI, &
@@ -1801,7 +1800,7 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
        .and. (spline_o%nguard == 123456789) ! check that ezspline_init has been called
   end function EZspline_allocated2
   
-  subroutine vecbicub_FOvars(ict,ivec,xvec,yvec,ivd,&
+  subroutine vecbicub_FOvars(ivec,xvec,yvec,ivd,&
       fvalBR,fvalBPHI,fvalBZ,&
       fvalER,fvalEPHI,fvalEZ,&
       nx,xpkg,ny,ypkg,&
@@ -1819,13 +1818,6 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
   implicit none
   integer iwarn1,iwarn2
   !============
-  integer ict(6)                    ! selector:
-  !        ict(1)=1 for f      (don't evaluate if ict(1)=0)
-  !        ict(2)=1 for df/dx  (don't evaluate if ict(2)=0)
-  !        ict(3)=1 for df/dy  (don't evaluate if ict(3)=0)
-  !        ict(4)=1 for d2f/dx2 (don't evaluate if ict(4)=0)
-  !        ict(5)=1 for d2f/dy2 (don't evaluate if ict(5)=0)
-  !        ict(6)=1 for d2f/dxdy (don't evaluate if ict(6)=0)
   !
   integer ivec                      ! vector dimensioning
   !
@@ -1927,17 +1919,17 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
   !
   !  vectorized evaluation
   !
-  call fvbicub(ict,ivec,ivd,fvalBR,ix,iy,dxn,dyn, &
+  call fvbicub(ivec,ivd,fvalBR,ix,iy,dxn,dyn, &
    hx,hxi,hy,hyi,fsplBR,inf2,ny)
-  call fvbicub(ict,ivec,ivd,fvalBPHI,ix,iy,dxn,dyn, &
+  call fvbicub(ivec,ivd,fvalBPHI,ix,iy,dxn,dyn, &
    hx,hxi,hy,hyi,fsplBPHI,inf2,ny)
-  call fvbicub(ict,ivec,ivd,fvalBZ,ix,iy,dxn,dyn, &
+  call fvbicub(ivec,ivd,fvalBZ,ix,iy,dxn,dyn, &
    hx,hxi,hy,hyi,fsplBZ,inf2,ny)
-  call fvbicub(ict,ivec,ivd,fvalER,ix,iy,dxn,dyn, &
+  call fvbicub(ivec,ivd,fvalER,ix,iy,dxn,dyn, &
    hx,hxi,hy,hyi,fsplER,inf2,ny)
-  call fvbicub(ict,ivec,ivd,fvalEPHI,ix,iy,dxn,dyn, &
+  call fvbicub(ivec,ivd,fvalEPHI,ix,iy,dxn,dyn, &
    hx,hxi,hy,hyi,fsplEPHI,inf2,ny)
-  call fvbicub(ict,ivec,ivd,fvalEZ,ix,iy,dxn,dyn, &
+  call fvbicub(ivec,ivd,fvalEZ,ix,iy,dxn,dyn, &
    hx,hxi,hy,hyi,fsplEZ,inf2,ny)
   !
   return
@@ -2892,7 +2884,7 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
       return
     end subroutine xlookup
   
-    subroutine fvbicub(ict,ivec,ivecd, &
+    subroutine fvbicub(ivec,ivecd, &
       fval,ii,jj,xparam,yparam,hx,hxi,hy,hyi, &
       fin,inf2,ny)
    !$acc routine seq
@@ -2904,7 +2896,6 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
    real(fp) :: z36th,xp,xpi,xp2,xpi2,cx,cxi,hx2,yp,ypi,yp2,ypi2,cy
    real(fp) :: cyi,hy2,cxd,cxdi,cyd,cydi
    !============
-   integer ict(6)                    ! requested output control
    integer ivec                      ! vector length
    integer ivecd                     ! vector dimension (1st dim of fval)
    !
@@ -2949,11 +2940,7 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
    z36th=sixth*sixth
    iadr=0
    !
-   if(ict(1).le.2) then
-      !
-      !  get desired values:
-      !
-      if(ict(1).eq.1) then
+
          !
          !  function value:
          !
@@ -3000,10 +2987,7 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
                  cx*(cyi*fin(3,i+1,j)+cy*fin(3,i+1,j+1)))
             !
             fval(1)=sum
-         end do
-      end if
-      !
-   endif    
+         end do 
    !
    return
   end subroutine fvbicub
