@@ -84,22 +84,7 @@ if (field_type.eq.'UNIFORM') then
    
    write(output_write,'("* * * * USING UNIFORM MAGNETIC FIELD * * * *")')
 
-   B_X=0._rp
-   B_Y=0._rp
-   B_Z=1._rp
-
-   E_X=0._rp
-   E_Y=0._rp
-   E_Z=0._rp
 else if (field_type.eq.'PSPLINE') then
-
-   B_X=0._rp
-   B_Y=0._rp
-   B_Z=0._rp
-
-   E_X=0._rp
-   E_Y=0._rp
-   E_Z=0._rp
 
    do it=1,size(XF)
       XF(it)=-0.1+(it-1)*0.2/(size(XF)-1)
@@ -116,11 +101,6 @@ else if (field_type.eq.'PSPLINE') then
    YF=XF
 endif
 
-!! Initialize location
-X_X=0._rp
-X_Y=0._rp
-X_Z=0._rp
-
 !! Set kinetic energy and pitch, random gyrophase, and then velocity
 Eo=10E6_rp
 eta0=90._rp*C_PI/180._rp
@@ -131,35 +111,41 @@ v0=C_C*sqrt(1._rp-1/gam0**2)
 !chi0=2*C_PI*rnd1(1)
 chi0=0
 
-V_X=v0*sin(eta0)*cos(chi0)
-V_Y=v0*sin(eta0)*sin(chi0)
-V_Z=v0*cos(eta0)
-gam=gam0
-
 v_norm=C_C
 if (field_type.eq.'UNIFORM') then
-   B_norm=B_Z(1)
+   B_norm=1._rp
 else if (field_type.eq.'PSPLINE') then
    B_norm=BF_Z(1,1)
 end if
 t_norm=C_ME/(C_E*B_norm)
 x_norm=V_norm*t_norm
 
-X_X=X_X/x_norm
-X_Y=X_Y/x_norm
-X_Z=X_Z/x_norm
+#ifdef ACC
+!$acc  parallel loop
+#endif ACC
+do pp=1,nRE
+   !initialize particle fields
+   B_X(pp)=0._rp/b_norm
+   B_Y(pp)=0._rp/b_norm
+   B_Z(pp)=1._rp/b_norm
 
-V_X=V_X/v_norm
-V_Y=V_Y/v_norm
-V_Z=V_Z/v_norm
+   E_X(pp)=0._rp/(b_norm*v_norm)
+   E_Y(pp)=0._rp/(b_norm*v_norm)
+   E_Z(pp)=0._rp/(b_norm*v_norm)
 
-B_X=B_X/b_norm
-B_Y=B_Y/b_norm
-B_Z=B_Z/b_norm
+   !! Initialize location
+   X_X(pp)=0._rp/x_norm
+   X_Y(pp)=0._rp/x_norm
+   X_Z(pp)=0._rp/x_norm
 
-E_X=E_X/(b_norm*v_norm)
-E_Y=E_Y/(b_norm*v_norm)
-E_Z=E_Z/(b_norm*v_norm)
+   V_X(pp)=v0*sin(eta0)*cos(chi0)/v_norm
+   V_Y(pp)=v0*sin(eta0)*sin(chi0)/v_norm
+   V_Z(pp)=v0*cos(eta0)/v_norm
+   gam(pp)=gam0
+end do
+#ifdef ACC  
+  !$acc end parallel loop
+#endif ACC
 
 #ifdef PSPLINE
 if (field_type.eq.'PSPLINE') then
