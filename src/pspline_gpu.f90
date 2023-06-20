@@ -1753,10 +1753,9 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
    !$acc routine seq
    type(EZspline2) spline_oBR,spline_oBPHI,spline_oBZ
    type(EZspline2) spline_oER,spline_oEPHI,spline_oEZ
-   integer, parameter :: k=1
-   real(fp), intent(in) :: p1(k), p2(k)
-   real(fp), intent(out):: fBR(k), fBPHI(k), fBZ(k)
-   real(fp), intent(out):: fER(k), fEPHI(k), fEZ(k)
+   real(fp), intent(in) :: p1(1), p2(1)
+   real(fp), intent(out):: fBR(1), fBPHI(1), fBZ(1)
+   real(fp), intent(out):: fER(1), fEPHI(1), fEZ(1)
    integer, intent(out) :: ier
    integer :: ifail
    integer, parameter :: ict(6) = (/1,0,0,0,0,0/)
@@ -1773,12 +1772,12 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
       return
    endif
   
-   call vecbicub_FOvars(ict, k, p1, p2, k, fBR, fBPHI, fBZ, fER, fEPHI, &
-        & fEZ, spline_oBR%n1, spline_oBR%x1pkg(1,1), &
-        & spline_oBR%n2, spline_oBR%x2pkg(1,1), &
-        & spline_oBR%fspl(1,1,1), spline_oBPHI%fspl(1,1,1), &
-        & spline_oBZ%fspl(1,1,1), spline_oER%fspl(1,1,1), &
-        & spline_oEPHI%fspl(1,1,1), spline_oEZ%fspl(1,1,1), &
+   call vecbicub_FOvars(ict, 1, p1, p2, 1, fBR, fBPHI, fBZ, fER, fEPHI, &
+        & fEZ, spline_oBR%n1, spline_oBR%x1pkg, &
+        & spline_oBR%n2, spline_oBR%x2pkg, &
+        & spline_oBR%fspl, spline_oBPHI%fspl, &
+        & spline_oBZ%fspl, spline_oER%fspl, &
+        & spline_oEPHI%fspl, spline_oEZ%fspl, &
         & spline_oBR%n1, iwarn, ifail)
   
    if(ifail /= 0) ier = 97
@@ -1834,12 +1833,12 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
   !    ivd -- 1st dimension of fval, .ge.ivec
   !
   ! output:
-  real(fp) :: fvalBR(ivd,*)                  ! output array
-  real(fp) :: fvalBPHI(ivd,*)                  ! output array
-  real(fp) :: fvalBZ(ivd,*)                  ! output array
-  real(fp) :: fvalER(ivd,*)                  ! output array
-  real(fp) :: fvalEPHI(ivd,*)                  ! output array
-  real(fp) :: fvalEZ(ivd,*)                  ! output array
+  real(fp) :: fvalBR(1)                  ! output array
+  real(fp) :: fvalBPHI(1)                  ! output array
+  real(fp) :: fvalBZ(1)                  ! output array
+  real(fp) :: fvalER(1)                  ! output array
+  real(fp) :: fvalEPHI(1)                  ! output array
+  real(fp) :: fvalEZ(1)                  ! output array
   !
   !  fval(1:ivec,1) -- values as per 1st non-zero ict(...) element
   !  fval(1:ivec,2) -- values as per 2nd non-zero ict(...) element
@@ -2911,7 +2910,7 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
    !
    real(fp) :: fin(0:3,inf2,ny)             ! interpolant data (cf "evbicub")
    !
-   real(fp) :: fval(ivecd,*)                ! output returned
+   real(fp) :: fval(1)                ! output returned
    !
    !  for detailed description of fin, ict and fval see subroutine
    !  evbicub comments.  Note ict is not vectorized; the same output
@@ -2992,473 +2991,11 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
                  cxi*(cyi*fin(3,i,j)  +cy*fin(3,i,j+1))+ &
                  cx*(cyi*fin(3,i+1,j)+cy*fin(3,i+1,j+1)))
             !
-            fval(v,iadr)=sum
+            fval(1)=sum
          end do
       end if
       !
-      if(ict(2).eq.1) then
-         !
-         !  df/dx:
-         !
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            !
-            !  in x direction...
-            !
-            xp=xparam(v)
-            xpi=1.0_fp-xp
-            xp2=xp*xp
-            xpi2=xpi*xpi
-  
-            cxd=3.0_fp*xp2-1.0_fp
-            cxdi=-3.0_fp*xpi2+1.0_fp
-            !
-            !   ...and in y direction
-            !
-            yp=yparam(v)
-            ypi=1.0_fp-yp
-            yp2=yp*yp
-            ypi2=ypi*ypi
-            !
-            cy=yp*(yp2-1.0_fp)
-            cyi=ypi*(ypi2-1.0_fp)
-            hy2=hy(v)*hy(v)
-            !
-            sum=hxi(v)*( &
-                 -(ypi*fin(0,i,j)  +yp*fin(0,i,j+1)) &
-                 +(ypi*fin(0,i+1,j)+yp*fin(0,i+1,j+1)))
-            !
-            sum=sum+sixth*hx(v)*( &
-                 cxdi*(ypi*fin(1,i,j)  +yp*fin(1,i,j+1))+ &
-                 cxd*(ypi*fin(1,i+1,j)+yp*fin(1,i+1,j+1)))
-            !
-            sum=sum+sixth*hxi(v)*hy2*( &
-                 -(cyi*fin(2,i,j)  +cy*fin(2,i,j+1)) &
-                 +(cyi*fin(2,i+1,j)+cy*fin(2,i+1,j+1)))
-            !
-            sum=sum+z36th*hx(v)*hy2*( &
-                 cxdi*(cyi*fin(3,i,j)  +cy*fin(3,i,j+1))+ &
-                 cxd*(cyi*fin(3,i+1,j)+cy*fin(3,i+1,j+1)))
-            !
-            fval(v,iadr)=sum
-         end do
-      end if
-      !
-      if(ict(3).eq.1) then
-         !
-         !  df/dy:
-         !
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            !
-            !  in x direction...
-            !
-            xp=xparam(v)
-            xpi=1.0_fp-xp
-            xp2=xp*xp
-            xpi2=xpi*xpi
-            !
-            cx=xp*(xp2-1.0_fp)
-            cxi=xpi*(xpi2-1.0_fp)
-            hx2=hx(v)*hx(v)
-            !
-            !   ...and in y direction
-            !
-            yp=yparam(v)
-            ypi=1.0_fp-yp
-            yp2=yp*yp
-            ypi2=ypi*ypi
-  
-            cyd=3.0_fp*yp2-1.0_fp
-            cydi=-3.0_fp*ypi2+1.0_fp
-            !
-            sum=hyi(v)*( &
-                 xpi*(-fin(0,i,j)  +fin(0,i,j+1))+ &
-                 xp*(-fin(0,i+1,j)+fin(0,i+1,j+1)))
-            !
-            sum=sum+sixth*hx2*hyi(v)*( &
-                 cxi*(-fin(1,i,j)  +fin(1,i,j+1))+ &
-                 cx*(-fin(1,i+1,j)+fin(1,i+1,j+1)))
-            !
-            sum=sum+sixth*hy(v)*( &
-                 xpi*(cydi*fin(2,i,j)  +cyd*fin(2,i,j+1))+ &
-                 xp*(cydi*fin(2,i+1,j)+cyd*fin(2,i+1,j+1)))
-            !
-            sum=sum+z36th*hx2*hy(v)*( &
-                 cxi*(cydi*fin(3,i,j)  +cyd*fin(3,i,j+1))+ &
-                 cx*(cydi*fin(3,i+1,j)+cyd*fin(3,i+1,j+1)))
-            !
-            fval(v,iadr)=sum
-         end do
-      end if
-      !
-      if(ict(4).eq.1) then
-         !
-         !  d2f/dx2:
-         !
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            !
-            !  in x direction...
-            !
-            xp=xparam(v)
-            xpi=1.0_fp-xp
-            !
-            !   ...and in y direction
-            !
-            yp=yparam(v)
-            ypi=1.0_fp-yp
-            yp2=yp*yp
-            ypi2=ypi*ypi
-            !
-            cy=yp*(yp2-1.0_fp)
-            cyi=ypi*(ypi2-1.0_fp)
-            hy2=hy(v)*hy(v)
-            !
-            sum=( &
-                 xpi*(ypi*fin(1,i,j)  +yp*fin(1,i,j+1))+ &
-                 xp*(ypi*fin(1,i+1,j)+yp*fin(1,i+1,j+1)))
-            !
-            sum=sum+sixth*hy2*( &
-                 xpi*(cyi*fin(3,i,j)  +cy*fin(3,i,j+1))+ &
-                 xp*(cyi*fin(3,i+1,j)+cy*fin(3,i+1,j+1)))
-            !
-            fval(v,iadr)=sum
-         end do
-      end if
-      !
-      if(ict(5).eq.1) then
-         !
-         !  d2f/dy2:
-         !
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            !
-            !  in x direction...
-            !
-            xp=xparam(v)
-            xpi=1.0_fp-xp
-            xp2=xp*xp
-            xpi2=xpi*xpi
-            !
-            cx=xp*(xp2-1.0_fp)
-            cxi=xpi*(xpi2-1.0_fp)
-            hx2=hx(v)*hx(v)
-            !
-            !   ...and in y direction
-            !
-            yp=yparam(v)
-            ypi=1.0_fp-yp
-            !
-            sum=( &
-                 xpi*(ypi*fin(2,i,j)  +yp*fin(2,i,j+1))+ &
-                 xp*(ypi*fin(2,i+1,j)+yp*fin(2,i+1,j+1)))
-            !
-            sum=sum+sixth*hx2*( &
-                 cxi*(ypi*fin(3,i,j)  +yp*fin(3,i,j+1))+ &
-                 cx*(ypi*fin(3,i+1,j)+yp*fin(3,i+1,j+1)))
-            !
-            fval(v,iadr)=sum
-         end do
-      end if
-      !
-      if(ict(6).eq.1) then
-         !
-         !  d2f/dxdy:
-         !
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            !
-            !  in x direction...
-            !
-            xp=xparam(v)
-            xpi=1.0_fp-xp
-            xp2=xp*xp
-            xpi2=xpi*xpi
-  
-            cxd=3.0_fp*xp2-1.0_fp
-            cxdi=-3.0_fp*xpi2+1.0_fp
-            !
-            !   ...and in y direction
-            !
-            yp=yparam(v)
-            ypi=1.0_fp-yp
-            yp2=yp*yp
-            ypi2=ypi*ypi
-  
-            cyd=3.0_fp*yp2-1.0_fp
-            cydi=-3.0_fp*ypi2+1.0_fp
-            !
-            sum=hxi(v)*hyi(v)*( &
-                 fin(0,i,j)  -fin(0,i,j+1) &
-                 -fin(0,i+1,j)+fin(0,i+1,j+1))
-            !
-            sum=sum+sixth*hx(v)*hyi(v)*( &
-                 cxdi*(-fin(1,i,j)  +fin(1,i,j+1))+ &
-                 cxd*(-fin(1,i+1,j)+fin(1,i+1,j+1)))
-            !
-            sum=sum+sixth*hxi(v)*hy(v)*( &
-                 -(cydi*fin(2,i,j)  +cyd*fin(2,i,j+1)) &
-                 +(cydi*fin(2,i+1,j)+cyd*fin(2,i+1,j+1)))
-            !
-            sum=sum+z36th*hx(v)*hy(v)*( &
-                 cxdi*(cydi*fin(3,i,j)  +cyd*fin(3,i,j+1))+ &
-                 cxd*(cydi*fin(3,i+1,j)+cyd*fin(3,i+1,j+1)))
-            !
-            fval(v,iadr)=sum
-         end do
-      end if
-      !
-      !-------------------------------------------------
-      !
-   else if(ict(1).eq.3) then
-      if(ict(2).eq.1) then
-         !  evaluate d3f/dx3 (not continuous)
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            yp=yparam(v)
-            ypi=1.0_fp-yp
-            yp2=yp*yp
-            ypi2=ypi*ypi
-            cy=yp*(yp2-1.0_fp)
-            cyi=ypi*(ypi2-1.0_fp)
-            hy2=hy(v)*hy(v)
-            sum=hxi(v)*( &
-                 -(ypi*fin(1,i,j)  +yp*fin(1,i,j+1)) &
-                 +(ypi*fin(1,i+1,j)+yp*fin(1,i+1,j+1)))
-            !
-            sum=sum+sixth*hy2*hxi(v)*( &
-                 -(cyi*fin(3,i,j)  +cy*fin(3,i,j+1)) &
-                 +(cyi*fin(3,i+1,j)+cy*fin(3,i+1,j+1)))
-            !
-            fval(v,iadr)=sum
-         end do
-      end if
-      !
-      if(ict(3).eq.1) then
-         !  evaluate d3f/dx2dy
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            xp=xparam(v)
-            xpi=1.0_fp-xp
-            yp=yparam(v)
-            ypi=1.0_fp-yp
-            yp2=yp*yp
-            ypi2=ypi*ypi
-            cyd=3.0_fp*yp2-1.0_fp
-            cydi=-3.0_fp*ypi2+1.0_fp
-            !
-            sum=hyi(v)*( &
-                 xpi*(-fin(1,i,j)  +fin(1,i,j+1))+ &
-                 xp*(-fin(1,i+1,j) +fin(1,i+1,j+1)))
-            !
-            sum=sum+sixth*hy(v)*( &
-                 xpi*(cydi*fin(3,i,j) +cyd*fin(3,i,j+1))+ &
-                 xp*(cydi*fin(3,i+1,j)+cyd*fin(3,i+1,j+1)))
-            !
-            fval(v,iadr)=sum
-         end do
-      end if
-      !
-      if(ict(4).eq.1) then
-         !  evaluate d3f/dxdy2
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            xp=xparam(v)
-            xpi=1.0_fp-xp
-            xp2=xp*xp
-            xpi2=xpi*xpi
-            cxd=3.0_fp*xp2-1.0_fp
-            cxdi=-3.0_fp*xpi2+1.0_fp
-            yp=yparam(v)
-            ypi=1.0_fp-yp
-            !
-            sum=hxi(v)*( &
-                 -(ypi*fin(2,i,j)  +yp*fin(2,i,j+1)) &
-                 +(ypi*fin(2,i+1,j)+yp*fin(2,i+1,j+1)))
-            !
-            sum=sum+sixth*hx(v)*( &
-                 cxdi*(ypi*fin(3,i,j)  +yp*fin(3,i,j+1))+ &
-                 cxd*(ypi*fin(3,i+1,j)+yp*fin(3,i+1,j+1)))
-            !
-            fval(v,iadr)=sum
-         end do
-      end if
-  
-      if(ict(5).eq.1) then
-         !  evaluate d3f/dy3 (not continuous)
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            !
-            xp=xparam(v)
-            xpi=1.0_fp-xp
-            xp2=xp*xp
-            xpi2=xpi*xpi
-            !
-            cx=xp*(xp2-1.0_fp)
-            cxi=xpi*(xpi2-1.0_fp)
-            hx2=hx(v)*hx(v)
-            !
-            sum=hyi(v)*( &
-                 xpi*(-fin(2,i,j)  +fin(2,i,j+1))+ &
-                 xp*(-fin(2,i+1,j) +fin(2,i+1,j+1)))
-            !
-            sum=sum+sixth*hx2*hyi(v)*( &
-                 cxi*(-fin(3,i,j)  +fin(3,i,j+1))+ &
-                 cx*(-fin(3,i+1,j) +fin(3,i+1,j+1)))
-            !
-            fval(v,iadr)=sum
-         end do
-      end if
-      !
-      !-----------------------------------
-      !  access to 4th derivatives
-      !
-   else if(ict(1).eq.4) then
-      if(ict(2).eq.1) then
-         !  evaluate d4f/dx3dy (not continuous)
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            yp=yparam(v)
-            ypi=1.0_fp-yp
-            yp2=yp*yp
-            ypi2=ypi*ypi
-            cyd=3.0_fp*yp2-1.0_fp
-            cydi=-3.0_fp*ypi2+1.0_fp
-            !
-            sum=hxi(v)*hyi(v)*( &
-                 +( fin(1,i,j)  -fin(1,i,j+1)) &
-                 +(-fin(1,i+1,j)+fin(1,i+1,j+1)))
-            !
-            sum=sum+sixth*hy(v)*hxi(v)*( &
-                 -(cydi*fin(3,i,j)  +cyd*fin(3,i,j+1)) &
-                 +(cydi*fin(3,i+1,j)+cyd*fin(3,i+1,j+1)))
-            !
-            fval(v,iadr)=sum
-         end do
-      end if
-      !
-      if(ict(3).eq.1) then
-         !  evaluate d4f/dx2dy2
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            !
-            xp=xparam(v)
-            xpi=1.0_fp-xp
-            yp=yparam(v)
-            ypi=1.0_fp-yp
-            !
-            sum=xpi*(ypi*fin(3,i,j)  +yp*fin(3,i,j+1))+ &
-                 xp*(ypi*fin(3,i+1,j)+yp*fin(3,i+1,j+1))
-            !
-            fval(v,iadr)=sum
-         end do
-      end if
-      !
-      if(ict(4).eq.1) then
-         !  evaluate d4f/dxdy3 (not continuous)
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            !
-            xp=xparam(v)
-            xpi=1.0_fp-xp
-            xp2=xp*xp
-            xpi2=xpi*xpi
-            !
-            cxd=3.0_fp*xp2-1.0_fp
-            cxdi=-3.0_fp*xpi2+1.0_fp
-            !
-            sum=hyi(v)*hxi(v)*( &
-                 +( fin(2,i,j)  -fin(2,i,j+1)) &
-                 +(-fin(2,i+1,j)+fin(2,i+1,j+1)))
-            !
-            sum=sum+sixth*hx(v)*hyi(v)*( &
-                 cxdi*(-fin(3,i,j)  +fin(3,i,j+1))+ &
-                 cxd*(-fin(3,i+1,j) +fin(3,i+1,j+1)))
-            !
-            fval(v,iadr)=sum
-         end do
-      end if
-      !
-      !-----------------------------------
-      !  access to 5th derivatives
-      !
-   else if(ict(1).eq.5) then
-      if(ict(2).eq.1) then
-         !  evaluate d5f/dx3dy2 (not continuous)
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            !
-            yp=yparam(v)
-            ypi=1.0_fp-yp
-            !
-            sum=hxi(v)*( &
-                 -(ypi*fin(3,i,j)  +yp*fin(3,i,j+1)) &
-                 +(ypi*fin(3,i+1,j)+yp*fin(3,i+1,j+1)))
-            !
-            fval(v,iadr)=sum
-         end do
-      end if
-      !
-      if(ict(3).eq.1) then
-         !  evaluate d5f/dx2dy3 (not continuous)
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            !
-            xp=xparam(v)
-            xpi=1.0_fp-xp
-            !
-            sum=hyi(v)*( &
-                 xpi*(-fin(3,i,j)  +fin(3,i,j+1))+ &
-                 xp*(-fin(3,i+1,j)+fin(3,i+1,j+1)))
-            !
-            fval(v,iadr)=sum
-         end do
-      end if
-      !
-      !-----------------------------------
-      !  access to 6th derivatives
-      !
-   else if(ict(1).eq.6) then
-      !  evaluate d6f/dx3dy3 (not continuous)
-      iadr=iadr+1
-      do v=1,ivec
-         i=ii(v)
-         j=jj(v)
-         sum=hxi(v)*hyi(v)*( &
-              +( fin(3,i,j)  -fin(3,i,j+1)) &
-              +(-fin(3,i+1,j)+fin(3,i+1,j+1)))
-         fval(v,iadr)=sum
-      end do
-   end if
+   endif    
    !
    return
   end subroutine fvbicub
