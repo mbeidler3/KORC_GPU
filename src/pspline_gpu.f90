@@ -1772,14 +1772,22 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
       return
    endif
   
+   associate (n1 => spline_oBR%n1, x1pkg => spline_oBR%x1pkg, &
+       n2 => spline_oBR%n2, x2pkg => spline_oBR%x2pkg, &
+       fsplBR => spline_oBR%fspl, fsplBPHI => spline_oBPHI%fspl, &
+       fsplBZ => spline_oBZ%fspl, fsplER => spline_oER%fspl, &
+       fsplEPHI => spline_oEPHI%fspl, fsplEZ => spline_oEZ%fspl)
+
    call vecbicub_FOvars(ict, 1, p1, p2, 1, fBR, fBPHI, fBZ, fER, fEPHI, &
-        & fEZ, spline_oBR%n1, spline_oBR%x1pkg, &
-        & spline_oBR%n2, spline_oBR%x2pkg, &
-        & spline_oBR%fspl, spline_oBPHI%fspl, &
-        & spline_oBZ%fspl, spline_oER%fspl, &
-        & spline_oEPHI%fspl, spline_oEZ%fspl, &
-        & spline_oBR%n1, iwarn, ifail)
+        & fEZ, n1, x1pkg, &
+        & n2, x2pkg, &
+        & fsplBR, fsplBPHI, &
+        & fsplBZ, fsplER, &
+        & fsplEPHI, fsplEZ, &
+        & n1, iwarn, ifail)
   
+   end associate
+
    if(ifail /= 0) ier = 97
   
   end subroutine EZspline_interp2_FOvars_cloud
