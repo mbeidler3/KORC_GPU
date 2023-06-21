@@ -2007,8 +2007,8 @@ subroutine herm2xy(xget,yget,x,nx,y,ny,ilinx,iliny, &
  !  1001    format(' ?herm2ev:  xget=',1pe11.4,' out of range ', &
  !           1pe11.4,' to ',1pe11.4)
       else
-         if((xget.lt.x(1)-0.5_fp*zxtol).or. &
-            (xget.gt.x(nx)+0.5_fp*zxtol)) &
+ !        if((xget.lt.x(1)-0.5_fp*zxtol).or. &
+ !           (xget.gt.x(nx)+0.5_fp*zxtol)) &
  !           write(6,1011) xget,x(1),x(nx)
  !  1011    format(' %herm2ev:  xget=',1pe15.8,' beyond range ', &
  !           1pe15.8,' to ',1pe15.8,' (fixup applied)')
@@ -2027,8 +2027,8 @@ subroutine herm2xy(xget,yget,x,nx,y,ny,ilinx,iliny, &
  !  1002    format(' ?herm2ev:  yget=',1pe11.4,' out of range ', &
  !           1pe11.4,' to ',1pe11.4)
       else
-         if((yget.lt.y(1)-0.5_fp*zytol).or. &
-            (yget.gt.y(ny)+0.5_fp*zytol)) &
+ !        if((yget.lt.y(1)-0.5_fp*zytol).or. &
+ !           (yget.gt.y(ny)+0.5_fp*zytol)) &
  !           write(6,1012) yget,y(1),y(ny)
  !  1012    format(' %herm2ev:  yget=',1pe15.8,' beyond range ', &
  !           1pe15.8,' to ',1pe15.8,' (fixup applied)')

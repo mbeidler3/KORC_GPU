@@ -165,7 +165,7 @@ if (field_type.eq.'PSPLINE') then
 
 #ifdef ACC 
   !$acc  parallel loop &
-  !$acc  copyin(bfield_2d,efield_2d)
+  !$acc  copyin(bfield_2d,efield_2d) &
   !$acc& private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop, &
   !$acc& V_Y_loop,V_Z_loop,gam_loop)
 #endif ACC
