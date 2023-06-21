@@ -1729,22 +1729,22 @@ subroutine splinck(x,inx,ilinx,ztol,ier)
 end subroutine splinck
 
 subroutine ibc_ck(ibc,slbl,xlbl,imin,imax,ier)
-  implicit none
-  ! Check that spline routine ibc flag is in range
-  integer, intent(in)  :: ibc          ! flag value
-  character(len=*), intent(in) :: slbl ! subroutine name
-  character(len=*), intent(in) :: xlbl ! axis label
-  integer, intent(in)  :: imin         ! min allowed value
-  integer, intent(in)  :: imax         ! max allowed value
-  integer, intent(out) :: ier          ! output -- set =1 if error detected
+   implicit none
+   ! Check that spline routine ibc flag is in range
+   integer, intent(in)  :: ibc          ! flag value
+   character(len=*), intent(in) :: slbl ! subroutine name
+   character(len=*), intent(in) :: xlbl ! axis label
+   integer, intent(in)  :: imin         ! min allowed value
+   integer, intent(in)  :: imax         ! max allowed value
+   integer, intent(out) :: ier          ! output -- set =1 if error detected
 
-  if((ibc.lt.imin).or.(ibc.gt.imax)) then
-     ier=1
-     write(6,1001) slbl,xlbl,ibc,imin,imax
-1001 format(' ?',a,' -- ibc',a,' = ',i9,' out of range ',i2,' to ',i2)
-  end if
+   if((ibc.lt.imin).or.(ibc.gt.imax)) then
+      ier=1
+      write(6,1001) slbl,xlbl,ibc,imin,imax
+1001  format(' ?',a,' -- ibc',a,' = ',i9,' out of range ',i2,' to ',i2)
+   end if
 
-  return
+   return
 end subroutine ibc_ck
 
 subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
@@ -1753,15 +1753,15 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
    !$acc routine seq
    type(EZspline2) spline_oBR,spline_oBPHI,spline_oBZ
    type(EZspline2) spline_oER,spline_oEPHI,spline_oEZ
-   real(fp), intent(in) :: p1(1), p2(1)
-   real(fp), intent(out):: fBR(1), fBPHI(1), fBZ(1)
-   real(fp), intent(out):: fER(1), fEPHI(1), fEZ(1)
+   real(fp), intent(in) :: p1, p2
+   real(fp), intent(out):: fBR, fBPHI, fBZ
+   real(fp), intent(out):: fER, fEPHI, fEZ
    integer, intent(out) :: ier
    integer :: ifail
    integer:: iwarn = 0
 
    !$acc routine (EZspline_allocated2) seq
-   !$acc routine (vecbicub_FOvars) seq
+   !$acc routine (evbicub_FOvars) seq
 
    ier = 0
    ifail = 0
@@ -1770,1146 +1770,448 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
       ier = 94
       return
    endif
-  
-   associate (n1 => spline_oBR%n1, x1pkg => spline_oBR%x1pkg, &
-       n2 => spline_oBR%n2, x2pkg => spline_oBR%x2pkg, &
-       fsplBR => spline_oBR%fspl, fsplBPHI => spline_oBPHI%fspl, &
-       fsplBZ => spline_oBZ%fspl, fsplER => spline_oER%fspl, &
-       fsplEPHI => spline_oEPHI%fspl, fsplEZ => spline_oEZ%fspl)
 
-   call vecbicub_FOvars(1, p1, p2, 1, fBR, fBPHI, fBZ, fER, fEPHI, &
-        & fEZ, n1, x1pkg, &
-        & n2, x2pkg, &
-        & fsplBR, fsplBPHI, &
-        & fsplBZ, fsplER, &
-        & fsplEPHI, fsplEZ, &
-        & n1, iwarn, ifail)
-  
-   end associate
+   call evbicub_FOvars(p1, p2,  &
+      spline_oBR%x1(1), spline_oBR%n1, &
+      spline_oBR%x2(1), spline_oBR%n2, &
+      spline_oBR%ilin1, spline_oBR%ilin2, &
+      spline_oBR%fspl(1,1,1), spline_oBPHI%fspl(1,1,1), &
+      spline_oBZ%fspl(1,1,1), spline_oER%fspl(1,1,1), &
+      spline_oEPHI%fspl(1,1,1), spline_oEZ%fspl(1,1,1), &
+      spline_oBR%n1, &
+      fBR, fBPHI, fBZ, fER, fEPHI, fEZ, ifail)
 
    if(ifail /= 0) ier = 97
   
-  end subroutine EZspline_interp2_FOvars_cloud
+end subroutine EZspline_interp2_FOvars_cloud
   
-  logical function EZspline_allocated2(spline_o)
-  !$acc routine seq
-  type(EZspline2) spline_o
-  EZspline_allocated2 = allocated(spline_o%fspl) &
-       .and. allocated(spline_o%x1) .and. allocated(spline_o%x1pkg) &
-       .and. allocated(spline_o%x2) .and. allocated(spline_o%x2pkg) &
-       .and. (spline_o%nguard == 123456789) ! check that ezspline_init has been called
-  end function EZspline_allocated2
+logical function EZspline_allocated2(spline_o)
+   !$acc routine seq
+   type(EZspline2) spline_o
+   EZspline_allocated2 = allocated(spline_o%fspl) &
+         .and. allocated(spline_o%x1) .and. allocated(spline_o%x1pkg) &
+         .and. allocated(spline_o%x2) .and. allocated(spline_o%x2pkg) &
+         .and. (spline_o%nguard == 123456789) ! check that ezspline_init has been called
+end function EZspline_allocated2
   
-  subroutine vecbicub_FOvars(ivec,xvec,yvec,ivd,&
-      fvalBR,fvalBPHI,fvalBZ,&
-      fvalER,fvalEPHI,fvalEZ,&
-      nx,xpkg,ny,ypkg,&
-      fsplBR,fsplBPHI,fsplBZ,&
-      fsplER,fsplEPHI,fsplEZ,inf2,iwarn,ier)
-  !$acc routine seq
-  !
-  !  vectorized spline evaluation routine -- 2d *compact* spline
-  !  1.  call vectorized zone lookup routine
-  !  2.  call vectorized spline evaluation routine
-  !
-  !--------------------------
-  !  input:
-  !============
-  implicit none
-  integer iwarn1,iwarn2
-  !============
-  !
-  integer ivec                      ! vector dimensioning
-  !
-  !    ivec-- number of vector pts (spline values to look up)
-  !
-  !  list of (x,y) pairs:
-  !
-  real(fp) :: xvec(ivec)                   ! x-locations at which to evaluate
-  real(fp) :: yvec(ivec)                   ! y-locations at which to evaluate
-  !
-  integer ivd                       ! 1st dimension of output array
-  !
-  !    ivd -- 1st dimension of fval, .ge.ivec
-  !
-  ! output:
-  real(fp) :: fvalBR(1)                  ! output array
-  real(fp) :: fvalBPHI(1)                  ! output array
-  real(fp) :: fvalBZ(1)                  ! output array
-  real(fp) :: fvalER(1)                  ! output array
-  real(fp) :: fvalEPHI(1)                  ! output array
-  real(fp) :: fvalEZ(1)                  ! output array
-  !
-  !  fval(1:ivec,1) -- values as per 1st non-zero ict(...) element
-  !  fval(1:ivec,2) -- values as per 2nd non-zero ict(...) element
-  !   --etc--
-  !
-  ! input:
-  integer nx,ny                     ! dimension of spline grids
-  real(fp) :: xpkg(nx,4)                   ! x grid "package" (cf genxpkg)
-  real(fp) :: ypkg(ny,4)                   ! y grid "package" (cf genxpkg)
-  integer inf2                      ! fspl 3rd array dimension, .ge.nx
-  real(fp) :: fsplBR(0:3,inf2,ny)            ! (compact) spline coefficients
-  real(fp) :: fsplBPHI(0:3,inf2,ny)            ! (compact) spline coefficients
-  real(fp) :: fsplBZ(0:3,inf2,ny)            ! (compact) spline coefficients
-  real(fp) :: fsplER(0:3,inf2,ny)            ! (compact) spline coefficients
-  real(fp) :: fsplEPHI(0:3,inf2,ny)            ! (compact) spline coefficients
-  real(fp) :: fsplEZ(0:3,inf2,ny)            ! (compact) spline coefficients
-  !
-  ! output:
-  ! condition codes, 0 = normal return
-  integer iwarn                     ! =1 if an x value was out of range
-  integer ier                       ! =1 if argument error detected
-  !
-  !---------------------------------------------------------------
-  !  local arrays
-  !
-  integer ix(ivec)                  ! zone indices {j}
-  real(fp) :: dxn(ivec)                    ! normalized displacements w/in zones
-  real(fp) :: hx(ivec)                     ! h(j) vector
-  real(fp) :: hxi(ivec)                    ! 1/h(j) vector
-  !
-  integer iy(ivec)                  ! zone indices {j}
-  real(fp) :: dyn(ivec)                    ! normalized displacements w/in zones
-  real(fp) :: hy(ivec)                     ! h(j) vector
-  real(fp) :: hyi(ivec)                    ! 1/h(j) vector
-  !
-  !---------------------------------------------------------------
-  !
-  !  error checks
-  !
-  !$acc routine (xlookup) seq
-  !$acc routine (fvbicub) seq
-  !
-  ier=0
-  !
-  if(nx.lt.2) then
-  write(6,*) ' ?vecbicub:  nx.lt.2:  nx = ',nx
-  ier=1
-  end if
-  !
-  if(ny.lt.2) then
-  write(6,*) ' ?vecbicub:  ny.lt.2:  ny = ',ny
-  ier=1
-  end if
-  !
-  if(ivec.le.0) then
-  write(6,*) ' ?vecbicub:  vector dimension .le. 0:  ivec = ', &
-      ivec
-  ier=1
-  end if
-  !
-  if(ivd.lt.ivec) then
-  write(6,*) &
-      ' ?vecbicub:  output vector dimension less than input ', &
-      'vector dimension.'
-  write(6,*) ' ivec=',ivec,' ivd=',ivd
-  ier=1
-  end if
-  !
-  if(ier.ne.0) return
-  !
-  !  vectorized lookup
-  !
-  ix=0
-  iy=0
-  call xlookup(ivec,xvec,nx,xpkg,2,ix,dxn,hx,hxi,iwarn1)
-  call xlookup(ivec,yvec,ny,ypkg,2,iy,dyn,hy,hyi,iwarn2)
-  iwarn=iwarn1+iwarn2
-  !
-  !  vectorized evaluation
-  !
-  call fvbicub(ivec,ivd,fvalBR,ix,iy,dxn,dyn, &
-   hx,hxi,hy,hyi,fsplBR,inf2,ny)
-  call fvbicub(ivec,ivd,fvalBPHI,ix,iy,dxn,dyn, &
-   hx,hxi,hy,hyi,fsplBPHI,inf2,ny)
-  call fvbicub(ivec,ivd,fvalBZ,ix,iy,dxn,dyn, &
-   hx,hxi,hy,hyi,fsplBZ,inf2,ny)
-  call fvbicub(ivec,ivd,fvalER,ix,iy,dxn,dyn, &
-   hx,hxi,hy,hyi,fsplER,inf2,ny)
-  call fvbicub(ivec,ivd,fvalEPHI,ix,iy,dxn,dyn, &
-   hx,hxi,hy,hyi,fsplEPHI,inf2,ny)
-  call fvbicub(ivec,ivd,fvalEZ,ix,iy,dxn,dyn, &
-   hx,hxi,hy,hyi,fsplEZ,inf2,ny)
-  !
-  return
-  end subroutine vecbicub_FOvars
-  
-  subroutine xlookup(ivec,xvec,nx,xpkg,imode,iv,dxn,hv,hiv,iwarn)
-      !  vector lookup routine
-      !
-      !   given a set of x points xvec(...) and an x grid (xpkg, nx x pts)
-      !   return the vector of indices iv(...) and displacements dxv(...)
-      !   within the indexed zones, corresponding to each x point.
-      !
-      !   if any of the x points in the vector are out of range the warning
-      !   flag iwarn is set.
-      !
-      !  MOD DMC Feb 2010: changes related to supporting nx=2 and nx=3 small grids.
-      !  Changes are consistent with Feb 2010 changes in genxpkg:
-      !    meanings of xpkg(1,4) and xpkg(3,4) interchanged.
-      !
-      !    if nx.eq.2:  xpkg(3,4) and xpkg(4,4) never referenced;
-      !    if nx.eq.3:  xpkg(4,4) never referenced.
-      !
-      !  input:
-      !$acc routine seq
-      implicit none
-      integer inum,istat,ilin,ialg,iper,imsg,init_guess,iprev,i
-      integer init,iprob,isrch,i_sign,inc
-      real(kind=fp) :: ztola,period,hav,havi,hloci,hloc,zdelta,xfac
-      REAL(kind=fp) :: zindx0,zdindx,zindex
-      !============
-      integer ivec                      ! size of vector
-      real(kind=fp) :: xvec(ivec)       ! x points to lookup on xpkg grid
-      integer nx                        ! size of grid
-      real(kind=fp) :: xpkg(nx,4)       ! grid data
-      integer imode                     ! output control flag
-      !  imode=1:  return indices iv(...) and un-normalized displacements dxn(...)
-      !            ignore hv and hiv
-      !                 dxn(j)=xvec(j)-xpkg(iv(j),1)
-      !
-      !  imode=2   return indices iv(...) and *normalized* displacements dxn(...)
-      !            and hv(...) and hiv(...)
-      !                 dxn(j)=(xvec(j)-xpkg(iv(j),1))*hiv(j)
-      !
-      !  output:
-      integer iv(ivec)                  ! index into grid for each xvec(j)
-      !  note: old values of iv(...) may be used as start point for grid
-      !  searches, depending on xpkg controls
-      real(fp) :: dxn(ivec)        ! displacement w/in zone (see imode)
-      real(fp) :: hv(ivec)         ! zone width (if imode=2)
-      real(fp) :: hiv(ivec)        ! inverse zone width (if imode=2)
-      integer iwarn                     ! =0: OK; =n:  n points out of range
-    
-      !  xpkg is a "structure" constructed by subroutine genxpkg, which
-      !  contains the x grid, xpkg(1:nx,1), spacing and error handling
-      !  information -- see genxpkg.f90
-    
-      real(fp), dimension(:), allocatable :: xuse
-      logical, dimension(:), allocatable :: iok
-      integer, dimension(:), allocatable :: imina,imaxa
-    
-      if(nx.lt.2) then
-         iwarn=1
-         write(6,*) ' ?? xlookup: nx.lt.2, nx=',nx
-         go to 1100
-      end if
-    
-      inum=ivec
-      allocate(xuse(inum),stat=istat)
-      if(istat.ne.0) then
-         iwarn=1
-         write(6,*) ' ?? xlookup "xuse" vector allocation failure!'
-         go to 1000
-      end if
-    
-      if(nx.eq.2) then
-         ilin=1
-      end if
-    
-      if(nx.gt.2) then
-         if(xpkg(3,4).eq.0.0_fp) then
-            ilin=1              ! evenly spaced grid
+subroutine evbicub_FOvars(xget,yget,x,nx,y,ny,ilinx,iliny, &
+   fBR,fBPHI,fBZ,fER,fEPHI,fEZ,inf2,fvalBR,fvalBPHI,fvalBZ, &
+   fvalER,fvalEPHI,fvalEZ,ier)
+   !$acc routine seq
+   !
+   !  evaluate a 2d cubic Spline interpolant on a rectilinear
+   !  grid -- this is C2 in both directions.
+   !
+   !  this subroutine calls two subroutines:
+   !     herm2xy  -- find cell containing (xget,yget)
+   !     fvbicub  -- evaluate interpolant function and (optionally) derivatives
+   !
+   !  input arguments:
+   !  ================
+   !
+   !============
+   implicit none
+   integer inf2
+   !============
+   integer,intent(in) :: nx,ny                     ! grid sizes
+   real(fp) :: xget,yget                    ! target of this interpolation
+   real(fp) :: x(nx)                        ! ordered x grid
+   real(fp) :: y(ny)                        ! ordered y grid
+   integer ilinx                     ! ilinx=1 => assume x evenly spaced
+   integer iliny                     ! iliny=1 => assume y evenly spaced
+   !
+   real(fp) :: fBR(0:3,inf2,ny)               ! function data
+   real(fp) :: fBPHI(0:3,inf2,ny)
+   real(fp) :: fBZ(0:3,inf2,ny)
+   real(fp) :: fER(0:3,inf2,ny)
+   real(fp) :: fEPHI(0:3,inf2,ny)
+   real(fp) :: fEZ(0:3,inf2,ny)
+   !
+   !       f 2nd dimension inf2 must be .ge. nx
+   !       contents of f:
+   !
+   !  f(0,i,j) = f @ x(i),y(j)
+   !  f(1,i,j) = d2f/dx2 @ x(i),y(j)
+   !  f(2,i,j) = d2f/dy2 @ x(i),y(j)
+   !  f(3,i,j) = d4f/dx2dy2 @ x(i),y(j)
+   !
+   !      (these are spline coefficients selected for continuous 2-
+   !      diffentiability, see mkbicub[w].f90)
+   !
+   !
+   !  ict(1)=1 -- return f  (0, don't)
+   !  ict(2)=1 -- return df/dx  (0, don't)
+   !  ict(3)=1 -- return df/dy  (0, don't)
+   !  ict(4)=1 -- return d2f/dx2  (0, don't)
+   !  ict(5)=1 -- return d2f/dy2  (0, don't)
+   !  ict(6)=1 -- return d2f/dxdy (0, don't)
+   !                   the number of non zero values ict(1:6)
+   !                   determines the number of outputs...
+   !
+   !  new dmc December 2005 -- access to higher derivatives (even if not
+   !  continuous-- but can only go up to 3rd derivatives on any one coordinate.
+   !     if ict(1)=3 -- want 3rd derivatives
+   !          ict(2)=1 for d3f/dx3
+   !          ict(3)=1 for d3f/dx2dy
+   !          ict(4)=1 for d3f/dxdy2
+   !          ict(5)=1 for d3f/dy3
+   !               number of non-zero values ict(2:5) gives no. of outputs
+   !     if ict(1)=4 -- want 4th derivatives
+   !          ict(2)=1 for d4f/dx3dy
+   !          ict(3)=1 for d4f/dx2dy2
+   !          ict(4)=1 for d4f/dxdy3
+   !               number of non-zero values ict(2:4) gives no. of outputs
+   !     if ict(1)=5 -- want 5th derivatives
+   !          ict(2)=1 for d5f/dx3dy2
+   !          ict(3)=1 for d5f/dx2dy3
+   !               number of non-zero values ict(2:3) gives no. of outputs
+   !     if ict(1)=6 -- want 6th derivatives
+   !          d6f/dx3dy3 -- one value is returned.
+   !
+   ! output arguments:
+   ! =================
+   !
+   real(fp) :: fvalBR                      ! output data
+   real(fp) :: fvalBPHI
+   real(fp) :: fvalBZ
+   real(fp) :: fvalER
+   real(fp) :: fvalEPHI
+   real(fp) :: fvalEZ
+
+   integer ier                       ! error code =0 ==> no error
+   !
+   !  fval(1) receives the first output (depends on ict(...) spec)
+   !  fval(2) receives the second output (depends on ict(...) spec)
+   !  fval(3) receives the third output (depends on ict(...) spec)
+   !  fval(4) receives the fourth output (depends on ict(...) spec)
+   !  fval(5) receives the fourth output (depends on ict(...) spec)
+   !  fval(6) receives the fourth output (depends on ict(...) spec)
+   !
+   !  examples:
+   !    on input ict = [1,1,1,0,0,1]
+   !   on output fval= [f,df/dx,df/dy,d2f/dxdy], elements 5 & 6 not referenced.
+   !
+   !    on input ict = [1,0,0,0,0,0]
+   !   on output fval= [f] ... elements 2 -- 6 never referenced.
+   !
+   !    on input ict = [0,0,0,1,1,0]
+   !   on output fval= [d2f/dx2,d2f/dy2] ... elements 3 -- 6 never referenced.
+   !
+   !    on input ict = [0,0,1,0,0,0]
+   !   on output fval= [df/dy] ... elements 2 -- 6 never referenced.
+   !
+   !  ier -- completion code:  0 means OK
+   !-------------------
+   !  local:
+   !
+   integer i,j                      ! cell indices
+   !
+   !  normalized displacement from (x(i),y(j)) corner of cell.
+   !    xparam=0 @x(i)  xparam=1 @x(i+1)
+   !    yparam=0 @y(j)  yparam=1 @y(j+1)
+   !
+   real(fp) :: xparam,yparam
+   !
+   !  cell dimensions and
+   !  inverse cell dimensions hxi = 1/(x(i+1)-x(i)), hyi = 1/(y(j+1)-y(j))
+   !
+   real(fp) :: hx,hy
+   real(fp) :: hxi,hyi
+   !
+   !  0 .le. xparam .le. 1
+   !  0 .le. yparam .le. 1
+   !
+   !  ** the interface is very similar to herm2ev.f90; can use herm2xy **
+   !---------------------------------------------------------------------
+   !$acc routine (herm2xy) seq
+   !$acc routine (fvbicub) seq
+   !
+   i=0
+   j=0
+   call herm2xy(xget,yget,x,nx,y,ny,ilinx,iliny, &
+      i,j,xparam,yparam,hx,hxi,hy,hyi,ier)
+   if(ier.ne.0) return
+   !
+   call fvbicub(fvalBR,i,j,xparam,yparam,hx,hxi,hy,hyi,fBR,inf2,ny)
+   call fvbicub(fvalBPHI,i,j,xparam,yparam,hx,hxi,hy,hyi,fBPHI,inf2,ny)
+   call fvbicub(fvalBZ,i,j,xparam,yparam,hx,hxi,hy,hyi,fBZ,inf2,ny)
+   call fvbicub(fvalER,i,j,xparam,yparam,hx,hxi,hy,hyi,fER,inf2,ny)
+   call fvbicub(fvalEPHI,i,j,xparam,yparam,hx,hxi,hy,hyi,fEPHI,inf2,ny)
+   call fvbicub(fvalEZ,i,j,xparam,yparam,hx,hxi,hy,hyi,fEZ,inf2,ny)
+   !
+   return
+end subroutine evbicub_FOvars
+
+subroutine herm2xy(xget,yget,x,nx,y,ny,ilinx,iliny, &
+   i,j,xparam,yparam,hx,hxi,hy,hyi,ier)
+   !---------------------------------------------------------------------
+   !  herm2xy -- look up x-y zone
+   !
+   !  this is the "first part" of herm2ev, see comments, above.
+   !
+   !
+   !  input of herm2xy
+   !  ================
+   !
+   !============
+   !$acc routine seq
+   implicit none
+   integer nxm,nym,ii,jj
+   !============
+   real(fp) :: zxget,zyget,zxtol,zytol
+   !============
+   integer nx,ny                     ! array dimensions
+   !
+   real(fp) :: xget,yget                    ! target point
+   real(fp) :: x(nx),y(ny)                  ! indep. coords., strict ascending
+   !
+   integer ilinx                     ! =1:  x evenly spaced
+   integer iliny                     ! =1:  y evenly spaced
+   !
+   !  output of herm2xy
+   !  =================
+   integer i,j                       ! index to cell containing target pt
+   !          on exit:  1.le.i.le.nx-1   1.le.j.le.ny-1
+   !
+   !  normalized position w/in (i,j) cell (btw 0 and 1):
+   !
+   real(fp) :: xparam                       ! (xget-x(i))/(x(i+1)-x(i))
+   real(fp) :: yparam                       ! (yget-y(j))/(y(j+1)-y(j))
+   !
+   !  grid spacing
+   !
+   real(fp) :: hx                           ! hx = x(i+1)-x(i)
+   real(fp) :: hy                           ! hy = y(j+1)-y(j)
+   !
+   !  inverse grid spacing:
+   !
+   real(fp) :: hxi                          ! 1/hx = 1/(x(i+1)-x(i))
+   real(fp) :: hyi                          ! 1/hy = 1/(y(j+1)-y(j))
+   !
+   integer ier                       ! return ier.ne.0 on error
+   !
+   !------------------------------------
+   !$acc routine (zonfind) seq
+   !
+   ier=0
+   !
+   !  range check
+   !
+   zxget=xget
+   zyget=yget
+   if((xget.lt.x(1)).or.(xget.gt.x(nx))) then
+      zxtol=4.0E-7_fp*max(abs(x(1)),abs(x(nx)))
+      if((xget.lt.x(1)-zxtol).or.(xget.gt.x(nx)+zxtol)) then
+         ier=1
+         write(6,1001) xget,x(1),x(nx)
+   1001    format(' ?herm2ev:  xget=',1pe11.4,' out of range ', &
+            1pe11.4,' to ',1pe11.4)
+      else
+         if((xget.lt.x(1)-0.5_fp*zxtol).or. &
+            (xget.gt.x(nx)+0.5_fp*zxtol)) &
+            write(6,1011) xget,x(1),x(nx)
+   1011    format(' %herm2ev:  xget=',1pe15.8,' beyond range ', &
+            1pe15.8,' to ',1pe15.8,' (fixup applied)')
+         if(xget.lt.x(1)) then
+            zxget=x(1)
          else
-            ilin=0
-            if(xpkg(3,4).gt.2.5_fp) then
-               ialg=3
-            else if(xpkg(3,4).gt.1.5_fp) then
-               ialg=2
-            else
-               ialg=1
-            end if
+            zxget=x(nx)
          end if
       end if
-    
-      if(xpkg(2,4).ne.0.0_fp) then
-         iper=1                         ! periodic grid
+   end if
+   if((yget.lt.y(1)).or.(yget.gt.y(ny))) then
+      zytol=4.0E-7_fp*max(abs(y(1)),abs(y(ny)))
+      if((yget.lt.y(1)-zytol).or.(yget.gt.y(ny)+zytol)) then
+         ier=1
+         write(6,1002) yget,y(1),y(ny)
+   1002    format(' ?herm2ev:  yget=',1pe11.4,' out of range ', &
+            1pe11.4,' to ',1pe11.4)
       else
-         iper=0
-      end if
-    
-      ztola=abs(xpkg(1,4))              ! tolerance for range checking
-    
-      if(xpkg(1,4).ge.0.0_fp) then
-         imsg=1                         ! write message on range error
-      else
-         imsg=0
-      end if
-    
-      init_guess=0
-      if(nx.gt.3) then
-         if(xpkg(4,4).gt.0.0_fp) then
-            init_guess=1
-            iprev=min((nx-1),max(1,iv(ivec)))
+         if((yget.lt.y(1)-0.5_fp*zytol).or. &
+            (yget.gt.y(ny)+0.5_fp*zytol)) &
+            write(6,1012) yget,y(1),y(ny)
+   1012    format(' %herm2ev:  yget=',1pe15.8,' beyond range ', &
+            1pe15.8,' to ',1pe15.8,' (fixup applied)')
+         if(yget.lt.y(1)) then
+            zyget=y(1)
          else
-            init_guess=0
+            zyget=y(ny)
          end if
       end if
-    
-      iwarn=0
-    
-      !---------------------
-      !  range check
-      !
-      if(iper.eq.0) then
-         !
-         !  check min/max with tolerance
-         !
-         do i=1,ivec
-            if(xvec(i).lt.xpkg(1,1)) then
-               xuse(i)=xpkg(1,1)
-               if((xpkg(1,1)-xvec(i)).gt.ztola) iwarn=iwarn+1
-            else if(xvec(i).gt.xpkg(nx,1)) then
-               xuse(i)=xpkg(nx,1)
-               if((xvec(i)-xpkg(nx,1)).gt.ztola) iwarn=iwarn+1
-            else
-               xuse(i)=xvec(i)
+   end if
+   if(ier.ne.0) return
+   !
+   !  now find interval in which target point lies..
+   !
+   nxm=nx-1
+   nym=ny-1
+   !
+   if(ilinx.eq.1) then
+      ii=1+nxm*(zxget-x(1))/(x(nx)-x(1))
+      i=min(nxm, ii)
+      if(zxget.lt.x(i)) then
+         i=i-1
+      else if(zxget.gt.x(i+1)) then
+         i=i+1
+      end if
+   else
+      if((1.le.i).and.(i.lt.nxm)) then
+         if((x(i).le.zxget).and.(zxget.le.x(i+1))) then
+            continue  ! already have the zone
+         else
+            call zonfind(x,nx,zxget,i)
+         end if
+      else
+         i=nx/2
+         call zonfind(x,nx,zxget,i)
+      end if
+   end if
+   !
+   if(iliny.eq.1) then
+      jj=1+nym*(zyget-y(1))/(y(ny)-y(1))
+      j=min(nym, jj)
+      if(zyget.lt.y(j)) then
+         j=j-1
+      else if(zyget.gt.y(j+1)) then
+         j=j+1
+      end if
+   else
+      if((1.le.j).and.(j.lt.nym)) then
+         if((y(j).le.zyget).and.(zyget.le.y(j+1))) then
+            continue  ! already have the zone
+         else
+            call zonfind(y,ny,zyget,j)
+         end if
+      else
+         j=ny/2
+         call zonfind(y,ny,zyget,j)
+      end if
+   end if
+   !
+   hx=(x(i+1)-x(i))
+   hy=(y(j+1)-y(j))
+   !
+   hxi=1.0_fp/hx
+   hyi=1.0_fp/hy
+   !
+   xparam=(zxget-x(i))*hxi
+   yparam=(zyget-y(j))*hyi
+   !
+   return
+end subroutine herm2xy
+
+subroutine zonfind(x,nx,zxget,i)
+   !$acc routine seq
+   implicit none
+   integer nx,nxm,i1,i2,ij,ii
+   real(fp) :: dx
+   real(fp) :: x(nx),zxget
+   integer i
+   !
+   !  find index i such that x(i).le.zxget.le.x(i+1)
+   !
+   !  x(1...nx) is strict increasing and x(1).le.zxget.le.x(nx)
+   !  (this is assumed to already have been checked -- no check here!)
+   !
+   nxm=nx-1
+   if((i.lt.1).or.(i.gt.nxm)) then
+      i1=1
+      i2=nx-1
+      go to 10
+   end if
+ 
+   if(x(i).gt.zxget) then
+      ! look down
+      dx=x(i+1)-x(i)
+      if((x(i)-zxget).gt.4*dx) then
+         i1=1
+         i2=i-1
+         go to 10
+      else
+         i2=i-1
+         do ij=i2,1,-1
+            if((x(ij).le.zxget).and.(zxget.le.x(ij+1))) then
+               i=ij
+               return
             end if
          end do
-    
+         i=1
+         return
+      end if
+   else if(x(i+1).lt.zxget) then
+      ! look up
+      dx=x(i+1)-x(i)
+      if((zxget-x(i+1)).gt.4*dx) then
+         i1=i+1
+         i2=nxm
+         go to 10
       else
-    
-         ! normalize to interval
-         period=xpkg(nx,1)-xpkg(1,1)
-         do i=1,ivec
-            if((xvec(i).lt.xpkg(1,1)).or.(xvec(i).gt.xpkg(nx,1))) then
-               xuse(i)=mod(xvec(i)-xpkg(1,1),period)
-               if(xuse(i).lt.0.0_fp) xuse(i)=xuse(i)+period
-               xuse(i)=xuse(i)+xpkg(1,1)
-               xuse(i)=max(xpkg(1,1),min(xpkg(nx,1),xuse(i)))
-            else
-               xuse(i)=xvec(i)
+         i2=i+1
+         do ij=i2,nxm
+            if((x(ij).le.zxget).and.(zxget.le.x(ij+1))) then
+               i=ij
+               return
             end if
          end do
-    
+         ij=nxm
+         return
       end if
-    
-      if((imsg.eq.1).and.(iwarn.gt.0)) then
-         write(6,*) ' %xlookup:  ',iwarn,' points not in range: ', &
-              xpkg(1,1),' to ',xpkg(nx,1)
-      end if
-    
-      !---------------------
-      !  actual lookup -- initially, assume even spacing
-      !
-      !   initial index guess:  1 + <1/h>*(x-x0) ... then refine
-      !
-      hav=xpkg(nx,2)
-      havi=xpkg(nx,3)
-      if(ilin.eq.1) then
-         !
-         !  faster lookup OK:  even spacing
-         !
-         if(init_guess.eq.0) then
-            !
-            !  even spacing lookup, no initial guess from previous iteration
-            !
-            do i=1,ivec
-               iv(i)=1+havi*(xuse(i)-xpkg(1,1))
-               iv(i)=max(1,min((nx-1),iv(i)))
-               if(imode.eq.1) then
-                  dxn(i)=(xuse(i)-xpkg(iv(i),1))
-               else
-                  dxn(i)=(xuse(i)-xpkg(iv(i),1))*havi
-                  hiv(i)=havi
-                  hv(i)=hav
-               end if
-            end do
-    
-         else
-            !
-            !  even spacing lookup, do use initial guess from previous iteration
-            !
-            do i=1,ivec
-               if((xpkg(iprev,1).le.xuse(i)).and. &
-                    (xuse(i).le.xpkg(iprev+1,1))) then
-                  iv(i)=iprev
-               else
-                  iv(i)=1+havi*(xuse(i)-xpkg(1,1))
-                  iv(i)=max(1,min((nx-1),iv(i)))
-                  iprev=iv(i)
-               end if
-               if(imode.eq.1) then
-                  dxn(i)=(xuse(i)-xpkg(iv(i),1))
-               else
-                  dxn(i)=(xuse(i)-xpkg(iv(i),1))*havi
-                  hiv(i)=havi
-                  hv(i)=hav
-               end if
-            end do
-         end if
-         go to 1000
-      end if
-    
-    4 continue
-    
-      init=-1
-      allocate(iok(inum),stat=istat)
-      if(istat.ne.0) then
-         iwarn=1
-         write(6,*) ' ?? xlookup "iok" vector allocation failure!'
-         go to 1000
-      end if
-    
-      if(ialg.lt.3) then
-         allocate(imina(inum),stat=istat)
-         if(istat.ne.0) then
-            iwarn=1
-            write(6,*) ' ?? xlookup "imina" vector allocation failure!'
-            go to 1000
-         end if
-    
-         allocate(imaxa(inum),stat=istat)
-         if(istat.ne.0) then
-            iwarn=1
-            write(6,*) ' ?? xlookup "imaxa" vector allocation failure!'
-            go to 1000
-         end if
-      end if
-    
-    5 continue                          ! re-entry -- hit problem cases...
-    
-      iprob=0                           ! count "problem" cases...
-      init=init+1
-    
-      if(init_guess.eq.0) then
-         go to (100,200,300) ialg
-      else
-         go to (150,250,350) ialg
-      end if
-      !-----------------------------------------------------------
-      !  Newton like algorithm:  use local spacing to estimate
-      !   step to next zone guess; don't use prior guess
-      !
-    100 continue
-      do i=1,ivec
-         !
-         !  first iteration
-         !         
-         if(init.eq.0) then
-            iok(i)=.FALSE.
-            imina(i)=1
-            imaxa(i)=nx-1
-            iv(i)=1+havi*(xuse(i)-xpkg(1,1))
-            iv(i)=max(imina(i),min(imaxa(i),iv(i)))
-            if(xuse(i).lt.xpkg(iv(i),1)) then
-               isrch=0
-               i_sign=-1
-               imaxa(i)=max(1,(iv(i)-1))
-            else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-               isrch=1
-               i_sign=+1
-               imina(i)=min((nx-1),(iv(i)+1))
-            else
-               iok(i)=.TRUE.
-            end if
-         end if
-         !
-         !  second iteration
-         !
-         if(.not.iok(i)) then
-            hloci=xpkg(iv(i),3)
-            hloc=xpkg(iv(i),2)
-            zdelta=(xuse(i)-xpkg(iv(i)+isrch,1))
-            if(i_sign*zdelta.le.hloc) then
-               inc=i_sign
-            else
-               inc=zdelta*hloci
-               inc=inc+i_sign
-            end if
-            iv(i)=iv(i)+inc
-            iv(i)=max(imina(i),min(imaxa(i),iv(i)))
-            if(xuse(i).lt.xpkg(iv(i),1)) then
-               isrch=0
-               i_sign=-1
-               imaxa(i)=max(1,(iv(i)-1))
-            else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-               isrch=1
-               i_sign=+1
-               imina(i)=min((nx-1),(iv(i)+1))
-            else
-               iok(i)=.TRUE.
-            end if
-            !
-            !  third iteration
-            !
-            if(.not.iok(i)) then
-               hloci=xpkg(iv(i),3)
-               hloc=xpkg(iv(i),2)
-               zdelta=(xuse(i)-xpkg(iv(i)+isrch,1))
-               if(i_sign*zdelta.le.hloc) then
-                  inc=i_sign
-               else
-                  inc=zdelta*hloci
-                  inc=inc+i_sign
-               end if
-               iv(i)=iv(i)+inc
-               iv(i)=max(imina(i),min(imaxa(i),iv(i)))
-               if(xuse(i).lt.xpkg(iv(i),1)) then
-                  isrch=0
-                  i_sign=-1
-                  imaxa(i)=max(1,(iv(i)-1))
-               else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                  isrch=1
-                  i_sign=+1
-                  imina(i)=min((nx-1),(iv(i)+1))
-               else
-                  iok(i)=.TRUE.
-               end if
-               !
-               !  fourth iteration
-               !
-               if(.not.iok(i)) then
-                  hloci=xpkg(iv(i),3)
-                  hloc=xpkg(iv(i),2)
-                  zdelta=(xuse(i)-xpkg(iv(i)+isrch,1))
-                  if(i_sign*zdelta.le.hloc) then
-                     inc=i_sign
-                  else
-                     inc=zdelta*hloci
-                     inc=inc+i_sign
-                  end if
-                  iv(i)=iv(i)+inc
-                  iv(i)=max(imina(i),min(imaxa(i),iv(i)))
-                  if(xuse(i).lt.xpkg(iv(i),1)) then
-                     isrch=0
-                     i_sign=-1
-                     imaxa(i)=max(1,(iv(i)-1))
-                  else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                     isrch=1
-                     i_sign=+1
-                     imina(i)=min((nx-1),(iv(i)+1))
-                  else
-                     iok(i)=.TRUE.
-                  end if
-                  !
-                  !  fifth iteration
-                  !
-                  if(.not.iok(i)) then
-                     hloci=xpkg(iv(i),3)
-                     hloc=xpkg(iv(i),2)
-                     zdelta=(xuse(i)-xpkg(iv(i)+isrch,1))
-                     if(i_sign*zdelta.le.hloc) then
-                        inc=i_sign
-                     else
-                        inc=zdelta*hloci
-                        inc=inc+i_sign
-                     end if
-                     iv(i)=iv(i)+inc
-                     iv(i)=max(imina(i),min(imaxa(i),iv(i)))
-                     if(xuse(i).lt.xpkg(iv(i),1)) then
-                        isrch=0
-                        i_sign=-1
-                        imaxa(i)=max(1,(iv(i)-1))
-                     else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                        isrch=1
-                        i_sign=+1
-                        imina(i)=min((nx-1),(iv(i)+1))
-                     else
-                        iok(i)=.TRUE.
-                     end if
-                     if(.not.iok(i)) iprob=iprob+1
-                     !
-                     !  end chain of iteration if-then-else blocks
-                     !
-                  end if
-               end if
-            end if
-         end if
-         !
-         !  end of loop
-         !
-      end do
-    
-      go to 500
-    
-      !-----------------------------------------------------------
-      !  Newton like algorithm:  use local spacing to estimate
-      !   step to next zone guess; DO use prior guess
-      !
-    150 continue
-    
-      do i=1,ivec
-         !
-         !  first iteration
-         !
-         if(init.eq.0) then
-            if((xpkg(iprev,1).le.xuse(i)).and. &
-                 (xuse(i).le.xpkg(iprev+1,1))) then
-               iok(i)=.TRUE.
-               iv(i)=iprev
-            else
-               iok(i)=.FALSE.
-               imina(i)=1
-               imaxa(i)=nx-1
-               iv(i)=1+havi*(xuse(i)-xpkg(1,1))
-               iv(i)=max(imina(i),min(imaxa(i),iv(i)))
-               if(xuse(i).lt.xpkg(iv(i),1)) then
-                  isrch=0
-                  i_sign=-1
-                  imaxa(i)=max(1,(iv(i)-1))
-               else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                  isrch=1
-                  i_sign=+1
-                  imina(i)=min((nx-1),(iv(i)+1))
-               else
-                  iok(i)=.TRUE.
-               end if
-            end if
-         end if
-         !
-         !  second iteration
-         !
-         if(.not.iok(i)) then
-            hloci=xpkg(iv(i),3)
-            hloc=xpkg(iv(i),2)
-            zdelta=(xuse(i)-xpkg(iv(i)+isrch,1))
-            if(i_sign*zdelta.le.hloc) then
-               inc=i_sign
-            else
-               inc=zdelta*hloci
-               inc=inc+i_sign
-            end if
-            iv(i)=iv(i)+inc
-            iv(i)=max(imina(i),min(imaxa(i),iv(i)))
-            if(xuse(i).lt.xpkg(iv(i),1)) then
-               isrch=0
-               i_sign=-1
-               imaxa(i)=max(1,(iv(i)-1))
-            else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-               isrch=1
-               i_sign=+1
-               imina(i)=min((nx-1),(iv(i)+1))
-            else
-               iok(i)=.TRUE.
-            end if
-            !
-            !  third iteration
-            !
-            if(.not.iok(i)) then
-               hloci=xpkg(iv(i),3)
-               hloc=xpkg(iv(i),2)
-               zdelta=(xuse(i)-xpkg(iv(i)+isrch,1))
-               if(i_sign*zdelta.le.hloc) then
-                  inc=i_sign
-               else
-                  inc=zdelta*hloci
-                  inc=inc+i_sign
-               end if
-               iv(i)=iv(i)+inc
-               iv(i)=max(imina(i),min(imaxa(i),iv(i)))
-               if(xuse(i).lt.xpkg(iv(i),1)) then
-                  isrch=0
-                  i_sign=-1
-                  imaxa(i)=max(1,(iv(i)-1))
-               else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                  isrch=1
-                  i_sign=+1
-                  imina(i)=min((nx-1),(iv(i)+1))
-               else
-                  iok(i)=.TRUE.
-               end if
-               !
-               !  fourth iteration
-               !
-               if(.not.iok(i)) then
-                  hloci=xpkg(iv(i),3)
-                  hloc=xpkg(iv(i),2)
-                  zdelta=(xuse(i)-xpkg(iv(i)+isrch,1))
-                  if(i_sign*zdelta.le.hloc) then
-                     inc=i_sign
-                  else
-                     inc=zdelta*hloci
-                     inc=inc+i_sign
-                  end if
-                  iv(i)=iv(i)+inc
-                  iv(i)=max(imina(i),min(imaxa(i),iv(i)))
-                  if(xuse(i).lt.xpkg(iv(i),1)) then
-                     isrch=0
-                     i_sign=-1
-                     imaxa(i)=max(1,(iv(i)-1))
-                  else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                     isrch=1
-                     i_sign=+1
-                     imina(i)=min((nx-1),(iv(i)+1))
-                  else
-                     iok(i)=.TRUE.
-                  end if
-                  !
-                  !  fifth iteration
-                  !
-                  if(.not.iok(i)) then
-                     hloci=xpkg(iv(i),3)
-                     hloc=xpkg(iv(i),2)
-                     zdelta=(xuse(i)-xpkg(iv(i)+isrch,1))
-                     if(i_sign*zdelta.le.hloc) then
-                        inc=i_sign
-                     else
-                        inc=zdelta*hloci
-                        inc=inc+i_sign
-                     end if
-                     iv(i)=iv(i)+inc
-                     iv(i)=max(imina(i),min(imaxa(i),iv(i)))
-                     if(xuse(i).lt.xpkg(iv(i),1)) then
-                        isrch=0
-                        i_sign=-1
-                        imaxa(i)=max(1,(iv(i)-1))
-                     else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                        isrch=1
-                        i_sign=+1
-                        imina(i)=min((nx-1),(iv(i)+1))
-                     else
-                        iok(i)=.TRUE.
-                     end if
-                     if(.not.iok(i)) iprob=iprob+1
-                     !
-                     !  end chain of iteration if-then-else blocks
-                     !
-                  end if
-               end if
-            end if
-         end if
-         !
-         !  end of loop
-         !
-         iprev=iv(i)
-      end do
-    
-      go to 500
-      !-----------------------------------------------------------
-      !  Binary search algorithm
-      !
-    200 continue
-      do i=1,ivec
-         !
-         !  first iteration
-         !
-         if(init.eq.0) then
-            iok(i)=.FALSE.
-            imina(i)=1
-            imaxa(i)=nx-1
-            iv(i)=nx/2
-            if(xuse(i).lt.xpkg(iv(i),1)) then
-               imaxa(i)=max(1,(iv(i)-1))
-            else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-               imina(i)=min((nx-1),(iv(i)+1))
-            else
-               iok(i)=.TRUE.
-            end if
-          end if
-          !
-          !  second iteration
-          !
-          if(.not.iok(i)) then
-            iv(i)=(imina(i)+imaxa(i))/2
-            if(xuse(i).lt.xpkg(iv(i),1)) then
-              imaxa(i)=max(1,(iv(i)-1))
-            else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-              imina(i)=min((nx-1),(iv(i)+1))
-            else
-              iok(i)=.TRUE.
-            end if
-            !
-            !  third iteration
-            !
-            if(.not.iok(i)) then
-               iv(i)=(imina(i)+imaxa(i))/2
-               if(xuse(i).lt.xpkg(iv(i),1)) then
-                  imaxa(i)=max(1,(iv(i)-1))
-               else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                  imina(i)=min((nx-1),(iv(i)+1))
-               else
-                  iok(i)=.TRUE.
-               end if
-               !
-               !  fourth iteration
-               !
-               if(.not.iok(i)) then
-                  iv(i)=(imina(i)+imaxa(i))/2
-                  if(xuse(i).lt.xpkg(iv(i),1)) then
-                     imaxa(i)=max(1,(iv(i)-1))
-                  else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                     imina(i)=min((nx-1),(iv(i)+1))
-                  else
-                     iok(i)=.TRUE.
-                  end if
-                  !
-                  !  fifth iteration
-                  !
-                  if(.not.iok(i)) then
-                     iv(i)=(imina(i)+imaxa(i))/2
-                     if(xuse(i).lt.xpkg(iv(i),1)) then
-                        imaxa(i)=max(1,(iv(i)-1))
-                     else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                        imina(i)=min((nx-1),(iv(i)+1))
-                     else
-                        iok(i)=.TRUE.
-                     end if
-                     if(.not.iok(i)) iprob=iprob+1
-                     !
-                     !  end chain of iteration if-then-else blocks
-                     !
-                  end if
-               end if
-            end if
-         end if
-         !
-         !  end of loop
-         !
-      end do
-    
-      go to 500
-      !-----------------------------------------------------------
-      !  Binary search algorithm
-      !
-    250 continue
-      do i=1,ivec
-         !
-         !  first iteration
-         !
-         if(init.eq.0) then
-            if((xpkg(iprev,1).le.xuse(i)).and. &
-                 (xuse(i).le.xpkg(iprev+1,1))) then
-               iok(i)=.TRUE.
-               iv(i)=iprev
-            else
-               iok(i)=.FALSE.
-               imina(i)=1
-               imaxa(i)=nx-1
-               iv(i)=nx/2
-               if(xuse(i).lt.xpkg(iv(i),1)) then
-                  imaxa(i)=max(1,(iv(i)-1))
-               else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                  imina(i)=min((nx-1),(iv(i)+1))
-               else
-                  iok(i)=.TRUE.
-               end if
-            end if
-         end if
-         !
-         !  second iteration
-         !
-         if(.not.iok(i)) then
-            iv(i)=(imina(i)+imaxa(i))/2
-            if(xuse(i).lt.xpkg(iv(i),1)) then
-               imaxa(i)=max(1,(iv(i)-1))
-            else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-               imina(i)=min((nx-1),(iv(i)+1))
-            else
-               iok(i)=.TRUE.
-            end if
-            !
-            !  third iteration
-            !
-            if(.not.iok(i)) then
-               iv(i)=(imina(i)+imaxa(i))/2
-               if(xuse(i).lt.xpkg(iv(i),1)) then
-                  imaxa(i)=max(1,(iv(i)-1))
-               else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                  imina(i)=min((nx-1),(iv(i)+1))
-               else
-                  iok(i)=.TRUE.
-               end if
-               !
-               !  fourth iteration
-               !
-               if(.not.iok(i)) then
-                  iv(i)=(imina(i)+imaxa(i))/2
-                  if(xuse(i).lt.xpkg(iv(i),1)) then
-                     imaxa(i)=max(1,(iv(i)-1))
-                  else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                     imina(i)=min((nx-1),(iv(i)+1))
-                  else
-                     iok(i)=.TRUE.
-                  end if
-                  !
-                  !  fifth iteration
-                  !
-                  if(.not.iok(i)) then
-                     iv(i)=(imina(i)+imaxa(i))/2
-                     if(xuse(i).lt.xpkg(iv(i),1)) then
-                        imaxa(i)=max(1,(iv(i)-1))
-                     else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                        imina(i)=min((nx-1),(iv(i)+1))
-                     else
-                        iok(i)=.TRUE.
-                     end if
-                     if(.not.iok(i)) iprob=iprob+1
-                     !
-                     !  end chain of iteration if-then-else blocks
-                     !
-                  end if
-               end if
-            end if
-         end if
-         !
-         !  end of loop
-         !
-         iprev=iv(i)
-      end do
-      !
-      go to 500
-      !-----------------------------------------------------------
-      !  algorithm:  piecewise linear indexing function lookup & correction
-      !
-    300 continue
-      do i=1,ivec
-         !
-         !  first iteration
-         !
-         if(init.eq.0) then
-            iok(i)=.FALSE.
-            !
-            !  piecewise linear indexing function on even spaced grid
-            !  (not same grid as x axis itself)
-            !
-            iv(i)=1+havi*(xuse(i)-xpkg(1,1))
-            iv(i)=max(1,min(nx-1,iv(i)))
-            xfac=(xuse(i)-(xpkg(1,1)+(iv(i)-1)*hav))*havi
-            zindx0=xpkg(iv(i),2)
-            if(iv(i).lt.nx-1) then
-               zdindx=xpkg(iv(i)+1,2)-zindx0
-            else
-               zdindx=nx-zindx0
-            end if
-            zindex=zindx0+xfac*zdindx
-            iv(i)=zindex
-            iv(i)=max(1,min(nx-1,iv(i)))
-            if(xuse(i).lt.xpkg(iv(i),1)) then
-               i_sign=-1
-            else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-               i_sign=+1
-            else
-               iok(i)=.TRUE.
-            end if
-         end if
-         !
-         !  second iteration
-         !
-         if(.not.iok(i)) then
-            iv(i)=iv(i)+i_sign
-            if(xuse(i).lt.xpkg(iv(i),1)) then
-               i_sign=-1
-            else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-               i_sign=+1
-            else
-               iok(i)=.TRUE.
-            end if
-            !
-            !  third iteration
-            !
-            if(.not.iok(i)) then
-               iv(i)=iv(i)+i_sign
-               if(xuse(i).lt.xpkg(iv(i),1)) then
-                  i_sign=-1
-               else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                  i_sign=+1
-               else
-                  iok(i)=.TRUE.
-               end if
-               !
-               !  fourth iteration
-               !
-               if(.not.iok(i)) then
-                  iv(i)=iv(i)+i_sign
-                  if(xuse(i).lt.xpkg(iv(i),1)) then
-                     i_sign=-1
-                  else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                     i_sign=+1
-                  else
-                     iok(i)=.TRUE.
-                  end if
-                  !
-                  !  fifth iteration
-                  !
-                  if(.not.iok(i)) then
-                     iv(i)=iv(i)+i_sign
-                     if(xuse(i).lt.xpkg(iv(i),1)) then
-                        i_sign=-1
-                     else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                        i_sign=+1
-                     else
-                        iok(i)=.TRUE.
-                     end if
-                     if(.not.iok(i)) iprob=iprob+1
-                     !
-                     !  end chain of iteration if-then-else blocks
-                     !
-                  end if
-               end if
-            end if
-         end if
-         !
-         !  end of loop
-         !
-      end do
-    
-      go to 500
-      !-----------------------------------------------------------
-      !  algorithm:  piecewise linear indexing function lookup & correction
-      !
-    350 continue
-      do i=1,ivec
-         !
-         !  first iteration
-         !
-         if(init.eq.0) then
-            if((xpkg(iprev,1).le.xuse(i)).and. &
-                 (xuse(i).le.xpkg(iprev+1,1))) then
-               iok(i)=.TRUE.
-               iv(i)=iprev
-            else
-               iok(i)=.FALSE.
-               !
-               !  piecewise linear indexing function on even spaced grid
-               !  (not same grid as x axis itself)
-               !
-               iv(i)=1+havi*(xuse(i)-xpkg(1,1))
-               iv(i)=max(1,min(nx-1,iv(i)))
-               xfac=(xuse(i)-(xpkg(1,1)+(iv(i)-1)*hav))*havi
-               zindx0=xpkg(iv(i),2)
-               if(iv(i).lt.nx-1) then
-                  zdindx=xpkg(iv(i)+1,2)-zindx0
-               else
-                  zdindx=nx-zindx0
-               end if
-               zindex=zindx0+xfac*zdindx
-               iv(i)=zindex
-               iv(i)=max(1,min(nx-1,iv(i)))
-               if(xuse(i).lt.xpkg(iv(i),1)) then
-                  i_sign=-1
-               else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                  i_sign=+1
-               else
-                  iok(i)=.TRUE.
-               end if
-            end if
-         end if
-         !
-         !  second iteration
-         !
-         if(.not.iok(i)) then
-            iv(i)=iv(i)+i_sign
-            if(xuse(i).lt.xpkg(iv(i),1)) then
-               i_sign=-1
-            else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-               i_sign=+1
-            else
-               iok(i)=.TRUE.
-            end if
-            !
-            !  third iteration
-            !
-            if(.not.iok(i)) then
-               iv(i)=iv(i)+i_sign
-               if(xuse(i).lt.xpkg(iv(i),1)) then
-                  i_sign=-1
-               else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                  i_sign=+1
-               else
-                  iok(i)=.TRUE.
-               end if
-               !
-               !  fourth iteration
-               !
-               if(.not.iok(i)) then
-                  iv(i)=iv(i)+i_sign
-                  if(xuse(i).lt.xpkg(iv(i),1)) then
-                     i_sign=-1
-                  else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                     i_sign=+1
-                  else
-                     iok(i)=.TRUE.
-                  end if
-                  !
-                  !  fifth iteration
-                  !
-                  if(.not.iok(i)) then
-                     iv(i)=iv(i)+i_sign
-                     if(xuse(i).lt.xpkg(iv(i),1)) then
-                        i_sign=-1
-                     else if(xuse(i).gt.xpkg(iv(i)+1,1)) then
-                        i_sign=+1
-                     else
-                        iok(i)=.TRUE.
-                     end if
-                     if(.not.iok(i)) iprob=iprob+1
-                     !
-                     !  end chain of iteration if-then-else blocks
-                     !
-                  end if
-               end if
-            end if
-         end if
-         !
-         !  end of loop
-         !
-         iprev=iv(i)
-      end do
-    
-      go to 500
-      !--------------------------------------------------------------------
-      !  any "problems" left? if so, re-enter the loop...
-      !
-    500 continue
-      if(iprob.gt.0) go to 5
-      !
-      !  OK -- all zones found; complete output stats
-      !
-      if(imode.eq.1) then
-         dxn=(xuse-xpkg(iv,1))          ! un-normalized
-      else if(ialg.ne.3) then
-         dxn=(xuse-xpkg(iv,1))*xpkg(iv,3) ! normalized to 1/h in each zone
-         hv=xpkg(iv,2)
-         hiv=xpkg(iv,3)
-      else
-         dxn=(xuse-xpkg(iv,1))*xpkg(iv,3) ! normalized to 1/h in each zone
-         hv=xpkg(iv+1,1)-xpkg(iv,1)
-         hiv=xpkg(iv,3)
-      end if
-    
-      deallocate(iok)
-      if(ialg.lt.3) then
-         deallocate(imina)
-         deallocate(imaxa)
-      end if
-      !
-      !  all done -- generalized lookup
-      !
-    1000 continue
-      deallocate(xuse)
-    
-    1100 continue
+   else
+      ! already there...
       return
-    end subroutine xlookup
+   end if
+ 
+   !---------------------------
+   !  binary search
+   !
+ 10 continue
+ 
+   if(i1.eq.i2) then
+      ! found by proc. of elimination
+      i=i1
+      return
+   end if
+ 
+   ii=(i1+i2)/2
+ 
+   if(zxget.lt.x(ii)) then
+      i2=ii-1
+   else if(zxget.gt.x(ii+1)) then
+      i1=ii+1
+   else
+      ! found
+      i=ii
+      return
+   end if
+ 
+   go to 10
+ 
+   return
+end subroutine zonfind
   
-    subroutine fvbicub(ivec,ivecd, &
-      fval,ii,jj,xparam,yparam,hx,hxi,hy,hyi, &
-      fin,inf2,ny)
+subroutine fvbicub(fval,i,j,xparam,yparam,hx,hxi,hy,hyi, &
+   fin,inf2,ny)
    !$acc routine seq
    !
    !============
    implicit none
-   integer ny,inf2,iadr,i,j
+   integer ny,inf2
    !============
    real(fp) :: z36th,xp,xpi,xp2,xpi2,cx,cxi,hx2,yp,ypi,yp2,ypi2,cy
    real(fp) :: cyi,hy2,cxd,cxdi,cyd,cydi
    !============
-   integer ivec                      ! vector length
-   integer ivecd                     ! vector dimension (1st dim of fval)
    !
-   integer ii(ivec),jj(ivec)         ! target cells (i,j)
-   real(fp) :: xparam(ivec),yparam(ivec)
+   integer i,j         ! target cells (i,j)
+   real(fp) :: xparam,yparam
    ! normalized displacements from (i,j) corners
    !
-   real(fp) :: hx(ivec),hy(ivec)            ! grid spacing, and
-   real(fp) :: hxi(ivec),hyi(ivec)          ! inverse grid spacing 1/(x(i+1)-x(i))
+   real(fp) :: hx,hy           ! grid spacing, and
+   real(fp) :: hxi,hyi         ! inverse grid spacing 1/(x(i+1)-x(i))
    ! & 1/(y(j+1)-y(j))
    !
    real(fp) :: fin(0:3,inf2,ny)             ! interpolant data (cf "evbicub")
    !
-   real(fp) :: fval(1)                ! output returned
+   real(fp) :: fval                ! output returned
    !
    !  for detailed description of fin, ict and fval see subroutine
    !  evbicub comments.  Note ict is not vectorized; the same output
@@ -2929,276 +2231,259 @@ subroutine EZspline_interp2_FOvars_cloud(spline_oBR, spline_oBPHI, &
    !  xparam**3-xparam, xpi**3-xpi, yparam**3-yparam, ypi**3-ypi ...
    !  and their derivatives as needed.
    !
-   integer v
    real(fp) :: sum
    !
    real(fp), parameter :: sixth = 0.166666666666666667_fp
    !
    !---------------
-   !   ...in x direction
    !
    z36th=sixth*sixth
-   iadr=0
+      !
+   !  in x direction...
    !
-
-         !
-         !  function value:
-         !
-         iadr=iadr+1
-         do v=1,ivec
-            i=ii(v)
-            j=jj(v)
-            !
-            !  in x direction...
-            !
-            xp=xparam(v)
-            xpi=1.0_fp-xp
-            xp2=xp*xp
-            xpi2=xpi*xpi
-            !
-            cx=xp*(xp2-1.0_fp)
-            cxi=xpi*(xpi2-1.0_fp)
-            hx2=hx(v)*hx(v)
-            !
-            !   ...and in y direction
-            !
-            yp=yparam(v)
-            ypi=1.0_fp-yp
-            yp2=yp*yp
-            ypi2=ypi*ypi
-            !
-            cy=yp*(yp2-1.0_fp)
-            cyi=ypi*(ypi2-1.0_fp)
-            hy2=hy(v)*hy(v)
-            !
-            sum=xpi*(ypi*fin(0,i,j)  +yp*fin(0,i,j+1))+ &
-                 xp*(ypi*fin(0,i+1,j)+yp*fin(0,i+1,j+1))
-            !
-            sum=sum+sixth*hx2*( &
-                 cxi*(ypi*fin(1,i,j)  +yp*fin(1,i,j+1))+ &
-                 cx*(ypi*fin(1,i+1,j)+yp*fin(1,i+1,j+1)))
-            !
-            sum=sum+sixth*hy2*( &
-                 xpi*(cyi*fin(2,i,j)  +cy*fin(2,i,j+1))+ &
-                 xp*(cyi*fin(2,i+1,j)+cy*fin(2,i+1,j+1)))
-            !
-            sum=sum+z36th*hx2*hy2*( &
-                 cxi*(cyi*fin(3,i,j)  +cy*fin(3,i,j+1))+ &
-                 cx*(cyi*fin(3,i+1,j)+cy*fin(3,i+1,j+1)))
-            !
-            fval(1)=sum
-         end do 
+   xp=xparam
+   xpi=1.0_fp-xp
+   xp2=xp*xp
+   xpi2=xpi*xpi
+   !
+   cx=xp*(xp2-1.0_fp)
+   cxi=xpi*(xpi2-1.0_fp)
+   hx2=hx*hx
+   !
+   !   ...and in y direction
+   !
+   yp=yparam
+   ypi=1.0_fp-yp
+   yp2=yp*yp
+   ypi2=ypi*ypi
+   !
+   cy=yp*(yp2-1.0_fp)
+   cyi=ypi*(ypi2-1.0_fp)
+   hy2=hy*hy
+   !
+   sum=xpi*(ypi*fin(0,i,j)  +yp*fin(0,i,j+1))+ &
+         xp*(ypi*fin(0,i+1,j)+yp*fin(0,i+1,j+1))
+   !
+   sum=sum+sixth*hx2*( &
+         cxi*(ypi*fin(1,i,j)  +yp*fin(1,i,j+1))+ &
+         cx*(ypi*fin(1,i+1,j)+yp*fin(1,i+1,j+1)))
+   !
+   sum=sum+sixth*hy2*( &
+         xpi*(cyi*fin(2,i,j)  +cy*fin(2,i,j+1))+ &
+         xp*(cyi*fin(2,i+1,j)+cy*fin(2,i+1,j+1)))
+   !
+   sum=sum+z36th*hx2*hy2*( &
+         cxi*(cyi*fin(3,i,j)  +cy*fin(3,i,j+1))+ &
+         cx*(cyi*fin(3,i+1,j)+cy*fin(3,i+1,j+1)))
+   !
+   fval=sum
    !
    return
-  end subroutine fvbicub
+end subroutine fvbicub
   
-    subroutine EZspline_free2(spline_o, ier)
-      implicit none
-      type(EZspline2) spline_o
-      ! ier:
-      ! 101= warning, spline object was never allocated
-      integer, intent(out) :: ier
-      integer ifail
-    
-      ier = 0
-      if(.not.EZspline_allocated2(spline_o)) ier=101
-    
-      deallocate(spline_o%x1, stat=ifail)
-      deallocate(spline_o%x2, stat=ifail)
-      deallocate(spline_o%fspl, stat=ifail)
-      deallocate(spline_o%bcval1min, stat=ifail)
-      deallocate(spline_o%bcval1max, stat=ifail)
-      deallocate(spline_o%bcval2min, stat=ifail)
-      deallocate(spline_o%bcval2max, stat=ifail)
-      deallocate(spline_o%x1pkg, stat=ifail)
-      deallocate(spline_o%x2pkg, stat=ifail)
-    
-      call EZspline_preInit2(spline_o)
-    
-      spline_o%n1 = 0
-      spline_o%n2 = 0
-    
-      return
-    end subroutine EZspline_free2
+subroutine EZspline_free2(spline_o, ier)
+   implicit none
+   type(EZspline2) spline_o
+   ! ier:
+   ! 101= warning, spline object was never allocated
+   integer, intent(out) :: ier
+   integer ifail
+   
+   ier = 0
+   if(.not.EZspline_allocated2(spline_o)) ier=101
+   
+   deallocate(spline_o%x1, stat=ifail)
+   deallocate(spline_o%x2, stat=ifail)
+   deallocate(spline_o%fspl, stat=ifail)
+   deallocate(spline_o%bcval1min, stat=ifail)
+   deallocate(spline_o%bcval1max, stat=ifail)
+   deallocate(spline_o%bcval2min, stat=ifail)
+   deallocate(spline_o%bcval2max, stat=ifail)
+   deallocate(spline_o%x1pkg, stat=ifail)
+   deallocate(spline_o%x2pkg, stat=ifail)
+   
+   call EZspline_preInit2(spline_o)
+   
+   spline_o%n1 = 0
+   spline_o%n2 = 0
+   
+   return
+end subroutine EZspline_free2
   
-  subroutine EZspline_error(ier)
-      !$acc routine seq
-      !
-      ! Error handling routine. Maps error ier code to a meaningful message.
-      ! Note: does not abort nor stop if ier/=0.
-      !
-      implicit none
-      integer, intent(in) :: ier
-  
-      if(ier == 0) return
-      write(6,*) '**EZspline** ERROR/WARNING #', ier,' occurred'
-  
-      select case(ier)
-      case(1)
-        write(6,*) '**EZspline** allocation error'
-      case(2)
-        write(6,*) '**EZspline** wrong BCS1 code'
-      case(3)
-        write(6,*) '**EZspline** wrong BCS2 code'
-      case(4)
-        write(6,*) '**EZspline** wrong BCS3 code'
-      case(5)
-        write(6,*) '**EZspline** Que??'
-      case(6)
-        write(6,*) '**EZspline** out of interval p1 < min(x1)'
-      case(7)
-        write(6,*) '**EZspline** out of interval p1 > max(x1)'
-      case(8)
-        write(6,*) '**EZspline** out of interval p2 < min(x2)'
-      case(9)
-        write(6,*) '**EZspline** out of interval p2 > max(x2)'
-      case(10)
-        write(6,*) '**EZspline** out of interval p3 < min(x3)'
-      case(11)
-        write(6,*) '**EZspline** out of interval p3 > max(x3)'
-      case(12)
-        write(6,*) '**EZspline** negative derivative order'
-      case(13)
-        write(6,*) '**EZspline** derivative order too high'
-      case(14)
-        write(6,*) '**EZspline** x1 grid is not strictly increasing'
-      case(15)
-        write(6,*) '**EZspline** x2 grid is not strictly increasing'
-      case(16)
-        write(6,*) '**EZspline** x3 grid is not strictly increasing'
-      case(17)
-        write(6,*) '**EZspline** could not save spline object in file '
-      case(18)
-        write(6,*) '**EZspline** memory allocation failure in coefficient setup'
-  
-      case(20)
-        write(6,*) '**EZspline** attempt to load spline object with wrong rank.'
-      case(21)
-        write(6,*) '**EZspline** could not load spline object from file '
-      case(22)
-        write(6,*) '**EZspline** loaded spline object from file but failed at coefficient set-up'
-      case(23)
-        write(6,*) '**EZspline** failed to free spline object'
-      case(24)
-        write(6,*) '**EZspline** 2nd order derivative not supported for Akima-Hermite (isHermite=1)'
-      case(25)
-        write(6,*) '**EZspline** not supported for Akima-Hermite (isHermite=1)'
-      case(26)
-        write(6,*) '**EZspline** memory allocation error in EZspline_interp'
-      case(27)
-        write(6,*) '**EZspline** an error ocurred in genxpkg'
-      case(28)
-        write(6,*) '**EZspline** memory allocation failure in ezspline_interp'
-      case(29)
-        write(6,*) '**EZspline** memory deallocation failure in ezspline_interp'
-      case(30)
-        write(6,*) '**EZspline** memory allocation error in EZspline_gradient'
-      case(31)
-        write(6,*) '**EZspline** memory deallocation error in EZspline_gradient'
-      case(32)
-        write(6,*) '**EZspline** memory allocation error in EZspline_derivative'
-      case(33)
-        write(6,*) '**EZspline** memory deallocation error in EZspline_derivative'
-      case(34)
-        write(6,*) '**EZspline** could not open netCDF file in EZspline_2netcdf'
-      case(35)
-        write(6,*) '**EZspline** could not write into netCDF file in EZspline_2netcdf'
-      case(36)
-        write(6,*) '**EZspline** could not read from netCDF file in EZspline_2netcdf'
-      case(37)
-        write(6,*) '**EZspline** could not close netCDF file in EZspline_2netcdf'
-      case(38)
-        write(6,*) '**EZspline** could not define variable (cdfDefVar) in EZspline_2netcdf'
-      case(39)
-        write(6,*) '**EZspline** could not open netCDF file in EZspline_save'
-      case(40)
-        write(6,*) '**EZspline** could not write into netCDF file in EZspline_save'
-      case(41)
-        write(6,*) '**EZspline** could not close netCDF file in EZspline_save'
-      case(42)
-        write(6,*) '**EZspline** could not define variable (cdfDefVar) in EZspline_save'
-      case(43)
-        write(6,*) '**EZspline** could not open netCDF file in EZspline_load'
-      case(44)
-        write(6,*) '**EZspline** could not read from netCDF file in EZspline_load'
-      case(45)
-        write(6,*) '**EZspline** could not close netCDF file in EZspline_load'
-      case(46)
-        write(6,*) '**EZspline** 2nd order derivative not supported for Piecewise Linear Interpolation (isLinear=1)'
-      case(47)
-        write(6,*) '**EZspline** not supported for Piecewise Linear Interpolation (isLinear=1)'
-  
-      case(50)
-        write(6,*) '**EZspline** ezspline_save (optional) spline name is blank.'
-      case(51)
-        write(6,*) '**EZspline** ezspline_save (optional) spline name too long (max 20 characters).'
-      case(52)
-        write(6,*) '**EZspline** ezspline_save (optional) spline name contains'
-        write(6,*) '             imbedded blanks or other illegal characters.'
-      case(53)
-        write(6,*) '**EZspline** attempt to write named spline object to NetCDF'
-        write(6,*) '             file with change of dimensionality or data type.'
-  
-      case(54)
-        write(6,*) '**EZspline** hybrid interpolation specification not in range -1:2'
-        write(6,*) '             error in EZhybrid_init.'
-      case(55)
-        write(6,*) '**EZspline** hybrid interpolation cannot mix Hermite and Spline interpolation.'
-        write(6,*) '             hspline(i)=1 and hspline(j)=2 in EZhybrid_init.'
-      case(56)
-        write(6,*) '**EZspline** non-default boundary condition unavailable: zonal or piecewise linear dimension.'
-        write(6,*) '             in EZhybrid_init.'
-  
-      case(57)
-        write(6,*) '**EZspline** dimension of "f" smaller than corresponding "fspl"'
-        write(6,*) '             dimension in "spline_o".'
-      case(58)
-        write(6,*) '**EZspline** dimension of "f" larger than corresponding "fspl"'
-        write(6,*) '             dimension in "spline_o".'
-  
-      case(90)
-        write(6,*) '**EZspline** an error occurred after attempting to evaluate the'
-        write(6,*) '             Hermite polynomials'
-      case(91)
-        write(6,*) '**EZspline** an error occurred after attempting to set up the'
-        write(6,*) '             Hermite polynomial coefficients'
-      case(92)
-        write(6,*) '**EZspline** warning in EZspline_load. Looks like saved object '
-        write(6,*) '             was not properly set-up (isReady=0).'
-      case(93)
-        write(6,*) '**EZspline** warning in EZspline_save. Looks like saved object '
-        write(6,*) '             was not properly set-up (isReady=0).'
-      case(94)
-        write(6,*) '**EZspline** an error occurred in EZspline_interp. Did you forget'
-        write(6,*) '             to set up the cubic spline coefficients by calling'
-        write(6,*) '             call EZspline_setup(spline_o, f, ier)'
-        write(6,*) '             ?'
-      case(95)
-        write(6,*) '**EZspline** some error occurred in EZspline_gradient'
-      case(96)
-        write(6,*) '**EZspline** some error occurred in EZspline_derivative'
-      case(97)
-        write(6,*) '**EZspline** some error occurred in EZspline_interp apparently'
-        write(6,*) '             related to a PSPLINE routine. Check if argument is '
-        write(6,*) '             outside interpolation domain by calling'
-        write(6,*) '             call EZspline_isInDomain(spline_o, [[k1, k2, k3,] .OR. k,] p1, p2, p3, ier ,ier)'
-        write(6,*) '             call EZspline_error(ier)'
-      case(98)
-        write(6,*) '**EZspline** error occurred in EZspline_setup'
-        write(6,*) '  if no other explanation-- ezspline_init call never made.'
-      case(99)
-        write(6,*) '**EZspline** some error occurred in EZspline_init, EZhybrid_init,  or EZlinear_init'
-      case(100)
-        write(6,*) '**EZSPLINE** EZspline_init, EZhybrid_init,  or EZlinear_init -- object already allocated.'
-      case(101)
-        write(6,*) '**EZSPLINE** object was never allocated.'
-      case default
-        write(6,*) '**EZspline** '
-      end select
-  
-      return
-    end subroutine EZspline_error
+subroutine EZspline_error(ier)
+   !$acc routine seq
+   !
+   ! Error handling routine. Maps error ier code to a meaningful message.
+   ! Note: does not abort nor stop if ier/=0.
+   !
+   implicit none
+   integer, intent(in) :: ier
+
+   if(ier == 0) return
+   write(6,*) '**EZspline** ERROR/WARNING #', ier,' occurred'
+
+   select case(ier)
+   case(1)
+      write(6,*) '**EZspline** allocation error'
+   case(2)
+      write(6,*) '**EZspline** wrong BCS1 code'
+   case(3)
+      write(6,*) '**EZspline** wrong BCS2 code'
+   case(4)
+      write(6,*) '**EZspline** wrong BCS3 code'
+   case(5)
+      write(6,*) '**EZspline** Que??'
+   case(6)
+      write(6,*) '**EZspline** out of interval p1 < min(x1)'
+   case(7)
+      write(6,*) '**EZspline** out of interval p1 > max(x1)'
+   case(8)
+      write(6,*) '**EZspline** out of interval p2 < min(x2)'
+   case(9)
+      write(6,*) '**EZspline** out of interval p2 > max(x2)'
+   case(10)
+      write(6,*) '**EZspline** out of interval p3 < min(x3)'
+   case(11)
+      write(6,*) '**EZspline** out of interval p3 > max(x3)'
+   case(12)
+      write(6,*) '**EZspline** negative derivative order'
+   case(13)
+      write(6,*) '**EZspline** derivative order too high'
+   case(14)
+      write(6,*) '**EZspline** x1 grid is not strictly increasing'
+   case(15)
+      write(6,*) '**EZspline** x2 grid is not strictly increasing'
+   case(16)
+      write(6,*) '**EZspline** x3 grid is not strictly increasing'
+   case(17)
+      write(6,*) '**EZspline** could not save spline object in file '
+   case(18)
+      write(6,*) '**EZspline** memory allocation failure in coefficient setup'
+
+   case(20)
+      write(6,*) '**EZspline** attempt to load spline object with wrong rank.'
+   case(21)
+      write(6,*) '**EZspline** could not load spline object from file '
+   case(22)
+      write(6,*) '**EZspline** loaded spline object from file but failed at coefficient set-up'
+   case(23)
+      write(6,*) '**EZspline** failed to free spline object'
+   case(24)
+      write(6,*) '**EZspline** 2nd order derivative not supported for Akima-Hermite (isHermite=1)'
+   case(25)
+      write(6,*) '**EZspline** not supported for Akima-Hermite (isHermite=1)'
+   case(26)
+      write(6,*) '**EZspline** memory allocation error in EZspline_interp'
+   case(27)
+      write(6,*) '**EZspline** an error ocurred in genxpkg'
+   case(28)
+      write(6,*) '**EZspline** memory allocation failure in ezspline_interp'
+   case(29)
+      write(6,*) '**EZspline** memory deallocation failure in ezspline_interp'
+   case(30)
+      write(6,*) '**EZspline** memory allocation error in EZspline_gradient'
+   case(31)
+      write(6,*) '**EZspline** memory deallocation error in EZspline_gradient'
+   case(32)
+      write(6,*) '**EZspline** memory allocation error in EZspline_derivative'
+   case(33)
+      write(6,*) '**EZspline** memory deallocation error in EZspline_derivative'
+   case(34)
+      write(6,*) '**EZspline** could not open netCDF file in EZspline_2netcdf'
+   case(35)
+      write(6,*) '**EZspline** could not write into netCDF file in EZspline_2netcdf'
+   case(36)
+      write(6,*) '**EZspline** could not read from netCDF file in EZspline_2netcdf'
+   case(37)
+      write(6,*) '**EZspline** could not close netCDF file in EZspline_2netcdf'
+   case(38)
+      write(6,*) '**EZspline** could not define variable (cdfDefVar) in EZspline_2netcdf'
+   case(39)
+      write(6,*) '**EZspline** could not open netCDF file in EZspline_save'
+   case(40)
+      write(6,*) '**EZspline** could not write into netCDF file in EZspline_save'
+   case(41)
+      write(6,*) '**EZspline** could not close netCDF file in EZspline_save'
+   case(42)
+      write(6,*) '**EZspline** could not define variable (cdfDefVar) in EZspline_save'
+   case(43)
+      write(6,*) '**EZspline** could not open netCDF file in EZspline_load'
+   case(44)
+      write(6,*) '**EZspline** could not read from netCDF file in EZspline_load'
+   case(45)
+      write(6,*) '**EZspline** could not close netCDF file in EZspline_load'
+   case(46)
+      write(6,*) '**EZspline** 2nd order derivative not supported for Piecewise Linear Interpolation (isLinear=1)'
+   case(47)
+      write(6,*) '**EZspline** not supported for Piecewise Linear Interpolation (isLinear=1)'
+   case(50)
+      write(6,*) '**EZspline** ezspline_save (optional) spline name is blank.'
+   case(51)
+      write(6,*) '**EZspline** ezspline_save (optional) spline name too long (max 20 characters).'
+   case(52)
+      write(6,*) '**EZspline** ezspline_save (optional) spline name contains'
+      write(6,*) '             imbedded blanks or other illegal characters.'
+   case(53)
+      write(6,*) '**EZspline** attempt to write named spline object to NetCDF'
+      write(6,*) '             file with change of dimensionality or data type.'
+   case(54)
+      write(6,*) '**EZspline** hybrid interpolation specification not in range -1:2'
+      write(6,*) '             error in EZhybrid_init.'
+   case(55)
+      write(6,*) '**EZspline** hybrid interpolation cannot mix Hermite and Spline interpolation.'
+      write(6,*) '             hspline(i)=1 and hspline(j)=2 in EZhybrid_init.'
+   case(56)
+      write(6,*) '**EZspline** non-default boundary condition unavailable: zonal or piecewise linear dimension.'
+      write(6,*) '             in EZhybrid_init.'
+   case(57)
+      write(6,*) '**EZspline** dimension of "f" smaller than corresponding "fspl"'
+      write(6,*) '             dimension in "spline_o".'
+   case(58)
+      write(6,*) '**EZspline** dimension of "f" larger than corresponding "fspl"'
+      write(6,*) '             dimension in "spline_o".'
+   case(90)
+      write(6,*) '**EZspline** an error occurred after attempting to evaluate the'
+      write(6,*) '             Hermite polynomials'
+   case(91)
+      write(6,*) '**EZspline** an error occurred after attempting to set up the'
+      write(6,*) '             Hermite polynomial coefficients'
+   case(92)
+      write(6,*) '**EZspline** warning in EZspline_load. Looks like saved object '
+      write(6,*) '             was not properly set-up (isReady=0).'
+   case(93)
+      write(6,*) '**EZspline** warning in EZspline_save. Looks like saved object '
+      write(6,*) '             was not properly set-up (isReady=0).'
+   case(94)
+      write(6,*) '**EZspline** an error occurred in EZspline_interp. Did you forget'
+      write(6,*) '             to set up the cubic spline coefficients by calling'
+      write(6,*) '             call EZspline_setup(spline_o, f, ier)'
+      write(6,*) '             ?'
+   case(95)
+      write(6,*) '**EZspline** some error occurred in EZspline_gradient'
+   case(96)
+      write(6,*) '**EZspline** some error occurred in EZspline_derivative'
+   case(97)
+      write(6,*) '**EZspline** some error occurred in EZspline_interp apparently'
+      write(6,*) '             related to a PSPLINE routine. Check if argument is '
+      write(6,*) '             outside interpolation domain by calling'
+      write(6,*) '             call EZspline_isInDomain(spline_o, [[k1, k2, k3,] .OR. k,] p1, p2, p3, ier ,ier)'
+      write(6,*) '             call EZspline_error(ier)'
+   case(98)
+      write(6,*) '**EZspline** error occurred in EZspline_setup'
+      write(6,*) '  if no other explanation-- ezspline_init call never made.'
+   case(99)
+      write(6,*) '**EZspline** some error occurred in EZspline_init, EZhybrid_init,  or EZlinear_init'
+   case(100)
+      write(6,*) '**EZSPLINE** EZspline_init, EZhybrid_init,  or EZlinear_init -- object already allocated.'
+   case(101)
+      write(6,*) '**EZSPLINE** object was never allocated.'
+   case default
+      write(6,*) '**EZspline** '
+   end select
+
+   return
+end subroutine EZspline_error
   
 #endif PSPLINE
     
-  end module pspline_gpu
+end module pspline_gpu

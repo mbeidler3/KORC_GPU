@@ -116,7 +116,6 @@ subroutine interp_fields(XX,YY,BX,BY,BZ,EX,EY,EZ,bfield_2d,efield_2d)
     !$acc routine seq
     REAL(rp),INTENT(IN)   :: XX,YY
     REAL(rp),INTENT(OUT)   :: BX,BY,BZ,EX,EY,EZ
-    REAL(rp),DIMENSION(1)   :: BX_i,BY_i,BZ_i,EX_i,EY_i,EZ_i
     TYPE(KORC_2D_FIELDS_INTERPOLANT),INTENT(IN) :: bfield_2d,efield_2d
     INTEGER                                        :: ezerr
 
@@ -124,15 +123,8 @@ subroutine interp_fields(XX,YY,BX,BY,BZ,EX,EY,EZ,bfield_2d,efield_2d)
     !$acc routine (EZspline_error) seq
   
     call EZspline_interp2_FOvars_cloud(bfield_2d%X,bfield_2d%Y,bfield_2d%Z, &
-        efield_2d%X,efield_2d%Y,efield_2d%Z,(/XX/),(/YY/),BX_i,BY_i,BZ_i,EX_i,EY_i,EZ_i,ezerr)
+        efield_2d%X,efield_2d%Y,efield_2d%Z,XX,YY,BX,BY,BZ,EX,EY,EZ,ezerr)
     call EZspline_error(ezerr)
-
-    BX=BX_i(1)
-    BY=BY_i(1)
-    BZ=BZ_i(1)
-    EX=EX_i(1)
-    EY=EY_i(1)
-    EZ=EZ_i(1)
   
 end subroutine
   
