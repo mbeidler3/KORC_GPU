@@ -1740,8 +1740,8 @@ subroutine ibc_ck(ibc,slbl,xlbl,imin,imax,ier)
 
    if((ibc.lt.imin).or.(ibc.gt.imax)) then
       ier=1
-      write(6,1001) slbl,xlbl,ibc,imin,imax
-1001  format(' ?',a,' -- ibc',a,' = ',i9,' out of range ',i2,' to ',i2)
+ !      write(6,1001) slbl,xlbl,ibc,imin,imax
+ !1001  format(' ?',a,' -- ibc',a,' = ',i9,' out of range ',i2,' to ',i2)
    end if
 
    return
@@ -2003,15 +2003,15 @@ subroutine herm2xy(xget,yget,x,nx,y,ny,ilinx,iliny, &
       zxtol=4.0E-7_fp*max(abs(x(1)),abs(x(nx)))
       if((xget.lt.x(1)-zxtol).or.(xget.gt.x(nx)+zxtol)) then
          ier=1
-         write(6,1001) xget,x(1),x(nx)
-   1001    format(' ?herm2ev:  xget=',1pe11.4,' out of range ', &
-            1pe11.4,' to ',1pe11.4)
+ !        write(6,1001) xget,x(1),x(nx)
+ !  1001    format(' ?herm2ev:  xget=',1pe11.4,' out of range ', &
+ !           1pe11.4,' to ',1pe11.4)
       else
          if((xget.lt.x(1)-0.5_fp*zxtol).or. &
             (xget.gt.x(nx)+0.5_fp*zxtol)) &
-            write(6,1011) xget,x(1),x(nx)
-   1011    format(' %herm2ev:  xget=',1pe15.8,' beyond range ', &
-            1pe15.8,' to ',1pe15.8,' (fixup applied)')
+ !           write(6,1011) xget,x(1),x(nx)
+ !  1011    format(' %herm2ev:  xget=',1pe15.8,' beyond range ', &
+ !           1pe15.8,' to ',1pe15.8,' (fixup applied)')
          if(xget.lt.x(1)) then
             zxget=x(1)
          else
@@ -2023,15 +2023,15 @@ subroutine herm2xy(xget,yget,x,nx,y,ny,ilinx,iliny, &
       zytol=4.0E-7_fp*max(abs(y(1)),abs(y(ny)))
       if((yget.lt.y(1)-zytol).or.(yget.gt.y(ny)+zytol)) then
          ier=1
-         write(6,1002) yget,y(1),y(ny)
-   1002    format(' ?herm2ev:  yget=',1pe11.4,' out of range ', &
-            1pe11.4,' to ',1pe11.4)
+ !        write(6,1002) yget,y(1),y(ny)
+ !  1002    format(' ?herm2ev:  yget=',1pe11.4,' out of range ', &
+ !           1pe11.4,' to ',1pe11.4)
       else
          if((yget.lt.y(1)-0.5_fp*zytol).or. &
             (yget.gt.y(ny)+0.5_fp*zytol)) &
-            write(6,1012) yget,y(1),y(ny)
-   1012    format(' %herm2ev:  yget=',1pe15.8,' beyond range ', &
-            1pe15.8,' to ',1pe15.8,' (fixup applied)')
+ !           write(6,1012) yget,y(1),y(ny)
+ !  1012    format(' %herm2ev:  yget=',1pe15.8,' beyond range ', &
+ !           1pe15.8,' to ',1pe15.8,' (fixup applied)')
          if(yget.lt.y(1)) then
             zyget=y(1)
          else
