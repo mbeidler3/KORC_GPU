@@ -121,7 +121,11 @@ t_norm=C_ME/(C_E*B_norm)
 x_norm=V_norm*t_norm
 
 #ifdef ACC
-!$acc  parallel loop
+!$acc  parallel loop &
+!$acc& firstprivate(nRE,v0,x_norm,v_norm,b_norm,chi0,gam0,eta0) &
+!$acc& copyout(e_z(1:nRE),v_x(1:nRE),x_y(1:nRE),x_z(1:nRE),v_z(1:nRE), &
+!$acc& e_x(1:nRE),b_y(1:nRE),b_x(1:nRE),b_z(1:nRE),e_y(1:nRE),x_x(1:nRE), &
+!$acc& gam(1:nRE),v_y(1:nRE))
 #endif ACC
 do pp=1,nRE
    !initialize particle fields
@@ -164,10 +168,11 @@ if (field_type.eq.'PSPLINE') then
      bfield_2d,efield_2d)
 
 #ifdef ACC 
-  !$acc  parallel loop &
-  !$acc  copyin(bfield_2d,efield_2d) &
-  !$acc& private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop, &
-  !$acc& V_Y_loop,V_Z_loop,gam_loop)
+   !$acc enter data copyin(bfield_2d,efield_2d)
+
+   !$acc  parallel loop &
+   !$acc& private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop, &
+   !$acc& V_Y_loop,V_Z_loop,gam_loop)
 #endif ACC
    do pp=1,nRE
 
@@ -198,6 +203,8 @@ if (field_type.eq.'PSPLINE') then
    enddo
 #ifdef ACC  
   !$acc end parallel loop
+
+  !$acc exit data delete(bfield_2d,efield_2d)
 #endif ACC
 
 endif

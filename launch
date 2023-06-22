@@ -93,7 +93,7 @@ _scenario_gpu_trial1_korcgpu_build() {
         -DCMAKE_BUILD_TYPE:String=$BUILD_TYPE \
         -DUSE_OMP=OFF \
         -DUSE_ACC=ON \
-        -DCMAKE_Fortran_FLAGS="-fast -acc=gpu -gpu=cc70 -Mfree -fPIC -O3 -Mpreprocess" \
+        -DCMAKE_Fortran_FLAGS="-fast -acc=gpu -gpu=deepcopy,cc70 -Mfree -fPIC -O3 -Mpreprocess" \
         -DCMAKE_Fortran_FLAGS_DEBUG="-g -Minfo=all -Minline -Minstrument -traceback -lnvhpcwrapnvtx" \
         -DUSE_PSPLINE=ON \
       ..

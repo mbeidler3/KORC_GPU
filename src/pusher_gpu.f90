@@ -30,6 +30,8 @@ subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V
 #endif 
 
   write(output_write,'("Using OpenACC")')
+  
+  !$acc enter data copyin(bfield_2d,efield_2d)
 
   !$acc  parallel loop &
   !$acc& private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop, &
@@ -158,6 +160,8 @@ subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V
   end do
 #ifdef ACC  
   !$acc end parallel loop
+
+  !$acc exit data delete(bfield_2d,efield_2d)
 #endif ACC
 
 #ifdef OMP
