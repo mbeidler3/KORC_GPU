@@ -65,7 +65,7 @@ _platform_perlmutter_setup() {
 
 _scenario_gpu_trial1_korcgpu_build() {
 
-  BUILD_TYPE=Debug
+  BUILD_TYPE=Release
   HARDWARE_TYPE=GPU
  
   echo cmake configured to generate a $BUILD_TYPE build.

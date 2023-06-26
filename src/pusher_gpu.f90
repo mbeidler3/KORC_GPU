@@ -38,8 +38,8 @@ subroutine FO_push(nRE,dt,t_steps,field_type,x_norm,v_norm,X_X,X_Y,X_Z,V_X,V_Y,V
   !$acc& private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop, &
   !$acc& V_Y_loop,V_Z_loop,gam_loop,B_X_loop,B_Y_loop,B_Z_loop, &
   !$acc& E_X_loop,E_Y_loop,E_Z_loop,U_X,U_Y,U_Z,cross_X,cross_Y,cross_Z, &
-  !$acc& U_hs_X.U_hs_Y,U_hs_Z,tau_X,tau_Y,tau_Z,up_X,up_Y,up_Z, &
-  !$acc& gp,sigma,us,t_X,t_Y,t_Z,s)
+  !$acc& U_hs_X,U_hs_Y,U_hs_Z,tau_X,tau_Y,tau_Z,up_X,up_Y,up_Z, &
+  !$acc& gp,sigma,us,t_X,t_Y,t_Z,s) &  
   !$acc& copyout(x_x(1:nRE),x_y(1:nRE),x_z(1:nRE), &
   !$acc& v_y(1:nRE),v_x(1:nRE),v_z(1:nRE),gam(1:nRE))
 #endif ACC
