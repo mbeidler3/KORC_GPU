@@ -171,8 +171,10 @@ if (field_type.eq.'PSPLINE') then
    !$acc enter data copyin(bfield_2d,efield_2d)
 
    !$acc  parallel loop &
+   !$acc& firstprivate(nRE) &
    !$acc& private(X_X_loop,X_Y_loop,X_Z_loop,V_X_loop, &
-   !$acc& V_Y_loop,V_Z_loop,gam_loop)
+   !$acc& V_Y_loop,V_Z_loop) &
+   !$acc& copyout(e_z(1:nRE),e_x(1:nRE),b_y(1:nRE),b_x(1:nRE),b_z(1:nRE),e_y(1:nRE))
 #endif ACC
    do pp=1,nRE
 
@@ -189,9 +191,6 @@ if (field_type.eq.'PSPLINE') then
 
       call interp_fields(X_X_loop,X_Y_loop,B_X_loop,B_Y_loop,B_Z_loop, &
          E_X_loop,E_Y_loop,E_Z_loop,bfield_2d,efield_2d)
-
-      X_X(pp)=X_X_loop
-      X_Y(pp)=X_Y_loop
 
       B_X(pp)=B_X_loop
       B_Y(pp)=B_Y_loop
